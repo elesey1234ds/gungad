@@ -187,7 +187,7 @@ export const SlotsGame: React.FC<SlotsGameProps> = ({
       <div className="relative flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-2 gap-2 min-h-0 overflow-hidden">
         {currency === 'STARS' && (
           <div className="flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-950/70 pl-1.5 pr-4 py-1 shadow-[0_0_28px_rgba(56,189,248,0.35)] shrink-0">
-            <img src="/assets/jackpot.jpg" alt="Jackpot" className="h-9 w-9 rounded-full object-cover drop-shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
+            <img src="/assets/jackpot-orb.png" alt="Jackpot" className="h-9 w-9 object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
             <span className="font-display font-black text-sky-100 tracking-wider text-xs sm:text-sm uppercase">
               {t('slotsJackpotBanner', lang)}
             </span>

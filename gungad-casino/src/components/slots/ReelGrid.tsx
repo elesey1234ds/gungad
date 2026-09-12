@@ -114,7 +114,7 @@ export const SymbolFace: React.FC<{
           </>
         )}
         {symbol === 'jackpot' && (
-          <image href="/assets/jackpot.jpg" x="6" y="6" width="88" height="88" preserveAspectRatio="xMidYMid slice" />
+          <image href="/assets/jackpot-orb.png" x="6" y="6" width="88" height="88" preserveAspectRatio="xMidYMid meet" />
         )}
       </svg>
       {highlight && (
