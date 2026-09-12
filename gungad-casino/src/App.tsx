@@ -52,7 +52,6 @@ import { centsToUsd, usdToCents } from './types/database';
 import { CURRENCIES } from './utils/currencies';
 
 import { useGgSession } from './hooks/useGgSession';
-import { setHeatProfileId } from './game/playerHeat';
 import { useGgBalance } from './hooks/useGgBalance';
 import { useGgOnline } from './hooks/useGgOnline';
 import { useLiveRates } from './hooks/useLiveRates';
@@ -106,10 +105,6 @@ export default function App() {
   const { session, status, updateBalance, updateStars, bumpWagered, setWelcomeBonusClaimed, refreshWallet } = useGgSession();
   const { version: ratesVersion } = useLiveRates();
   const isLive = status === 'live';
-
-  useEffect(() => {
-    setHeatProfileId(session?.profile_id ?? null);
-  }, [session?.profile_id]);
 
   const [playMode, setPlayMode] = useState<PlayMode>(() =>
     localStorage.getItem('gungad_play_mode') === 'demo' ? 'demo' : 'real',

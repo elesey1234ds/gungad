@@ -6,7 +6,6 @@ import { soundFx } from '../../utils/sound';
 import { formatCurrency } from '../../utils/currencies';
 import confetti from 'canvas-confetti';
 import { keepLiveWin, pickRouletteWinner, roulettePayoutMult } from '../../game/demoOdds';
-import { consumeWarmupBet } from '../../game/playerHeat';
 
 interface RouletteGameProps {
   user: UserProfile;
@@ -141,10 +140,9 @@ export const RouletteGame: React.FC<RouletteGameProps> = ({
     setWinningNumber(null);
     setShowNumbers(true);
 
-    const warmup = consumeWarmupBet();
     let winnerNum = pickRouletteWinner(ROULETTE_NUMBERS, isDemo);
     const naturalWin = numberWinsAnyBet(betsSnapshot, winnerNum, isDemo);
-    const keepWin = warmup || keepLiveWin(naturalWin, isDemo);
+    const keepWin = keepLiveWin(naturalWin, isDemo);
     if (keepWin !== naturalWin) {
       winnerNum = pickNumberMatchingBets(betsSnapshot, keepWin, isDemo);
     }

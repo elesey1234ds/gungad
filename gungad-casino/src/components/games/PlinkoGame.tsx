@@ -4,8 +4,7 @@ import { t } from '../../translations';
 import { BetControls } from '../BetControls';
 import { soundFx } from '../../utils/sound';
 import confetti from 'canvas-confetti';
-import { keepLiveWin, modestWinningPlinkoBucket, nearestLosingPlinkoBucket, plinkoMultipliers } from '../../game/demoOdds';
-import { consumeWarmupBet } from '../../game/playerHeat';
+import { keepLiveWin, nearestLosingPlinkoBucket, plinkoMultipliers } from '../../game/demoOdds';
 
 interface PlinkoGameProps {
   user: UserProfile;
@@ -226,21 +225,9 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
     setLastBetUSD(stake);
 
     const id = ++ballIdRef.current;
-    const warmup = consumeWarmupBet();
     const isDemo = playMode === 'demo';
 
-    let targetBucket: number | null = warmup ? modestWinningPlinkoBucket(riskBuckets) : null;
     const goRight: boolean[] = Array.from({ length: ROW_COUNT }, () => Math.random() < 0.5);
-    if (targetBucket != null) {
-      const rightsNeeded = Math.max(0, Math.min(ROW_COUNT, targetBucket));
-      const order = Array.from({ length: ROW_COUNT }, (_, i) => i);
-      for (let i = order.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [order[i], order[j]] = [order[j], order[i]];
-      }
-      for (let i = 0; i < ROW_COUNT; i++) goRight[i] = false;
-      for (let i = 0; i < rightsNeeded; i++) goRight[order[i]] = true;
-    }
 
     let rights = 0;
     const path: { x: number; y: number; peg: boolean }[] = [];
@@ -256,10 +243,8 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
     }
 
     let bucketIndex = Math.max(0, Math.min(BUCKET_COUNT - 1, rights));
-    if (targetBucket == null && riskBuckets[bucketIndex] > 1 && !keepLiveWin(true, isDemo)) {
+    if (riskBuckets[bucketIndex] > 1 && !keepLiveWin(true, isDemo)) {
       bucketIndex = nearestLosingPlinkoBucket(riskBuckets, bucketIndex);
-    } else if (targetBucket != null) {
-      bucketIndex = targetBucket;
     }
     const bucketX = (100 / BUCKET_COUNT) * (bucketIndex + 0.5);
     path.push({ x: bucketX, y: 92, peg: false });

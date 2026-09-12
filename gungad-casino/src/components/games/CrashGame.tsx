@@ -7,7 +7,6 @@ import { formatCurrency } from '../../utils/currencies';
 import confetti from 'canvas-confetti';
 import { Flame, Rocket, History } from 'lucide-react';
 import { generateCrashPoint } from '../../game/demoOdds';
-import { consumeWarmupBet, isWarmupActive } from '../../game/playerHeat';
 import type { PlaceBetResult, ResolveBetResult } from '../../hooks/useGgBalance';
 import { usdToCents, centsToUsd } from '../../types/database';
 
@@ -543,7 +542,7 @@ export const CrashGame: React.FC<CrashGameProps> = ({
     restartTimeoutRef.current = null;
 
     const roundId = ++roundIdRef.current;
-    const cp = generateCrashPoint(playModeRef.current === 'demo', { warmup: isWarmupActive() });
+    const cp = generateCrashPoint(playModeRef.current === 'demo');
     crashPointRef.current = cp;
     setCrashPoint(cp);
     cashedOutRef.current = false;
@@ -752,7 +751,6 @@ export const CrashGame: React.FC<CrashGameProps> = ({
     setHasBet(true);
     onUpdateBalance(before - stake);
     soundFx.playClick();
-    consumeWarmupBet();
     setPlacing(false);
     placingRef.current = false;
 

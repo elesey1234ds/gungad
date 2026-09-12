@@ -15,7 +15,6 @@ import {
   BanditSymbol,
 } from '../../game/slots/banditConfig';
 import { initialGrid, playSpin, SpinResult } from '../../game/slots/banditEngine';
-import { consumeWarmupBet } from '../../game/playerHeat';
 import { ReelGrid, SymbolFace } from '../slots/ReelGrid';
 import { SlotBetBar } from '../slots/SlotBetBar';
 
@@ -140,7 +139,7 @@ export const SlotsGame: React.FC<SlotsGameProps> = ({
     setLastWin(0);
     setSpinning(true);
 
-    const result = playSpin(bet, playMode === 'demo', Math.random, { warmup: consumeWarmupBet() });
+    const result = playSpin(bet, playMode === 'demo', Math.random);
     resultRef.current = result;
     // Lock final grid BEFORE bumping spinId so reels read the correct strip
     setGrid(result.grid);

@@ -7,7 +7,6 @@ import { formatCurrency } from '../../utils/currencies';
 import confetti from 'canvas-confetti';
 import { RefreshCw } from 'lucide-react';
 import { forceDiceRoll, housePayoutFactor, keepLiveWin } from '../../game/demoOdds';
-import { consumeWarmupBet } from '../../game/playerHeat';
 
 interface DiceGameProps {
   user: UserProfile;
@@ -58,7 +57,6 @@ export const DiceGame: React.FC<DiceGameProps> = ({
     onUpdateBalance(afterBet);
     setLastBetUSD(betAmountUSD);
     setIsRolling(true);
-    const warmup = consumeWarmupBet();
     const isDemo = playMode === 'demo';
 
     let count = 0;
@@ -79,7 +77,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({
       if (!mountedRef.current) return;
       let finalRoll = parseFloat((Math.random() * 99.99).toFixed(2));
       const naturalWin = mode === 'over' ? finalRoll > targetValue : finalRoll < targetValue;
-      const win = warmup || keepLiveWin(naturalWin, isDemo);
+      const win = keepLiveWin(naturalWin, isDemo);
       if (win !== naturalWin) {
         finalRoll = forceDiceRoll(mode, targetValue, win);
       }

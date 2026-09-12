@@ -66,16 +66,11 @@ function breakLineToLoss(line: [BanditSymbol, BanditSymbol, BanditSymbol], rng: 
   return [line[0], next, line[2]];
 }
 
-export function playSpin(betUSD: number, isDemo = false, rng: Rng = Math.random, opts?: { warmup?: boolean }): SpinResult {
+export function playSpin(betUSD: number, isDemo = false, rng: Rng = Math.random): SpinResult {
   const weights = isDemo ? DEMO_WEIGHTS : REAL_WEIGHTS;
-  let line: [BanditSymbol, BanditSymbol, BanditSymbol];
-  if (opts?.warmup) {
-    line = ['lemon', 'lemon', 'grape'];
-  } else {
-    line = [pickWeighted(weights, rng), pickWeighted(weights, rng), pickWeighted(weights, rng)];
-    const natural = evaluateLine(line);
-    if (!natural.jackpot && natural.kind !== 'lose' && !keepLiveWin(true, isDemo, rng)) line = breakLineToLoss(line, rng);
-  }
+  let line: [BanditSymbol, BanditSymbol, BanditSymbol] = [pickWeighted(weights, rng), pickWeighted(weights, rng), pickWeighted(weights, rng)];
+  const natural = evaluateLine(line);
+  if (!natural.jackpot && natural.kind !== 'lose' && !keepLiveWin(true, isDemo, rng)) line = breakLineToLoss(line, rng);
   const evaluation = evaluateLine(line);
   return {
     grid: buildGrid(line, weights, rng),

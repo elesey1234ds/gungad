@@ -7,7 +7,6 @@ import { formatCurrency } from '../../utils/currencies';
 import confetti from 'canvas-confetti';
 import { Bomb, Diamond } from 'lucide-react';
 import { keepLiveWin, minesEdgeFactor } from '../../game/demoOdds';
-import { consumeWarmupBet } from '../../game/playerHeat';
 
 interface MinesGameProps {
   user: UserProfile;
@@ -39,7 +38,6 @@ export const MinesGame: React.FC<MinesGameProps> = ({
   const [currentMultiplier, setCurrentMultiplier] = useState<number>(1.0);
   const [lastBetUSD, setLastBetUSD] = useState<number>(10);
   const afterBetRef = useRef(0);
-  const warmupRoundRef = useRef(false);
   const firstClickDoneRef = useRef(false);
 
   // Multiplier math formula per revealed gem
@@ -59,7 +57,6 @@ export const MinesGame: React.FC<MinesGameProps> = ({
     afterBetRef.current = afterBet;
     onUpdateBalance(afterBet);
     setLastBetUSD(betAmountUSD);
-    warmupRoundRef.current = consumeWarmupBet();
     firstClickDoneRef.current = false;
 
     // Randomize mine positions
@@ -90,9 +87,7 @@ export const MinesGame: React.FC<MinesGameProps> = ({
 
     let isMine = tile.isMine;
     if (isFirstClick) {
-      if (warmupRoundRef.current) {
-        isMine = false;
-      } else if (!isMine && !keepLiveWin(true, playMode === 'demo')) {
+      if (!isMine && !keepLiveWin(true, playMode === 'demo')) {
         isMine = true;
       }
     }

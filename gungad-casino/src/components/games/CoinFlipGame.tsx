@@ -6,7 +6,6 @@ import { soundFx } from '../../utils/sound';
 import confetti from 'canvas-confetti';
 import { Target, Skull, AlertCircle } from 'lucide-react';
 import { coinFlipWinMult, keepLiveWin } from '../../game/demoOdds';
-import { consumeWarmupBet } from '../../game/playerHeat';
 
 interface CoinFlipGameProps {
   user: UserProfile;
@@ -67,11 +66,10 @@ export const CoinFlipGame: React.FC<CoinFlipGameProps> = ({
     setResult(null);
     setPlayedChoice(lockedChoice);
 
-    const warmup = consumeWarmupBet();
     const isDemo = playMode === 'demo';
     const fair: 'heads' | 'tails' = Math.random() > 0.5 ? 'heads' : 'tails';
     const naturalWin = fair === lockedChoice;
-    const win = warmup || keepLiveWin(naturalWin, isDemo);
+    const win = keepLiveWin(naturalWin, isDemo);
     const outcome: 'heads' | 'tails' = win ? lockedChoice : lockedChoice === 'heads' ? 'tails' : 'heads';
 
     setRotation((prev) => {

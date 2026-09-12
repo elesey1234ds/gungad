@@ -7,9 +7,10 @@
 
 export const DEMO_PAYOUT_FACTOR = 103 / 99; // ≈1.0404 over 1% house-edge formulas
 
-/** Live wins are kept with probability 1/LIVE_WIN_DIVISOR (~60.6%). Payouts stay full. */
-export const LIVE_WIN_DIVISOR = 1.65;
-export const P_KEEP_LIVE_WIN = 1 / LIVE_WIN_DIVISOR;
+/** Live wins are kept with probability LIVE_WIN_RATE (30%). Payouts stay full. */
+export const LIVE_WIN_RATE = 0.3;
+export const LIVE_WIN_DIVISOR = 1 / LIVE_WIN_RATE;
+export const P_KEEP_LIVE_WIN = LIVE_WIN_RATE;
 
 /**
  * If the natural outcome is a loss, stay a loss.
@@ -44,11 +45,8 @@ export function blackjackNaturalMult(isDemo: boolean): number {
   return isDemo ? 2.6 : 2.5;
 }
 
-/** Soften early crash buckets in demo. Live mass is shifted left (~EV / 1.65). Cashout X is never scaled. */
-export function generateCrashPoint(isDemo = false, opts?: { warmup?: boolean }): number {
-  if (opts?.warmup) {
-    return parseFloat((2.2 + Math.random() * 1.3).toFixed(2));
-  }
+/** Soften early crash buckets in demo. Live mass is shifted left. Cashout X is never scaled. */
+export function generateCrashPoint(isDemo = false): number {
   const rand = Math.random();
   let point: number;
   if (isDemo) {
@@ -100,20 +98,6 @@ export function nearestLosingPlinkoBucket(buckets: number[], fromIndex: number):
     }
   }
   return best;
-}
-
-/** Modest winning bucket for warmup (not the jackpot edge). */
-export function modestWinningPlinkoBucket(buckets: number[]): number {
-  const modest: number[] = [];
-  const anyWin: number[] = [];
-  for (let i = 0; i < buckets.length; i++) {
-    if (buckets[i] <= 1) continue;
-    anyWin.push(i);
-    if (buckets[i] < 5) modest.push(i);
-  }
-  const pool = modest.length ? modest : anyWin;
-  if (!pool.length) return Math.floor(buckets.length / 2);
-  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /** Plinko multipliers — demo bumps mid buckets slightly. */

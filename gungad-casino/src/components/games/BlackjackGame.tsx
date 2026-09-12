@@ -6,7 +6,6 @@ import { soundFx } from '../../utils/sound';
 import confetti from 'canvas-confetti';
 import { Layers, Shield, ShieldCheck } from 'lucide-react';
 import { blackjackNaturalMult } from '../../game/demoOdds';
-import { consumeWarmupBet } from '../../game/playerHeat';
 import { formatCurrency } from '../../utils/currencies';
 
 interface BlackjackGameProps {
@@ -137,7 +136,6 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
     const balanceAfterBet = user.balanceUSD - stakeUSD;
     const isDemo = playMode === 'demo';
     const naturalMult = blackjackNaturalMult(isDemo);
-    const warmup = consumeWarmupBet();
 
     soundFx.playCard();
     onUpdateBalance(balanceAfterBet);
@@ -145,10 +143,10 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
     setResultMessage('');
     setGameState('dealing');
 
-    const p1 = warmup ? makeCard('K', true) : getRandomCard(true, { role: 'player', isDemo });
-    const d1 = warmup ? makeCard('6', true) : getRandomCard(true, { role: 'dealer', isDemo });
-    const p2 = warmup ? makeCard('A', true) : getRandomCard(true, { role: 'player', isDemo });
-    const d2 = warmup ? makeCard('5', false) : getRandomCard(false, { role: 'dealer', isDemo });
+    const p1 = getRandomCard(true, { role: 'player', isDemo });
+    const d1 = getRandomCard(true, { role: 'dealer', isDemo });
+    const p2 = getRandomCard(true, { role: 'player', isDemo });
+    const d2 = getRandomCard(false, { role: 'dealer', isDemo });
     upcardRef.current = d1;
     holeRef.current = d2;
 
