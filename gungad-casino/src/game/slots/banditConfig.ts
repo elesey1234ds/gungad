@@ -25,6 +25,11 @@ export const TRIPLE_PAY: Record<BanditSymbol, number> = {
 /** 2-of-a-kind left-to-right (reel0===reel1, reel2 different) → stake return */
 export const PAIR_PAY = 1;
 export const JACKPOT_STARS = 20_000;
+/** Chance a losing spin lands exactly 2 jackpot symbols on the payline (tease — 3/3 stays impossible).
+ * Calibrated so ~15% of ALL spins tease (tease applies to natural losses only). */
+export const JACKPOT_TEASE_RATE = 0.23;
+/** Chance a losing spin shows a single jackpot symbol on the payline */
+export const JACKPOT_SINGLE_RATE = 0.05;
 
 /**
  * Reel weights — tuned for ~96–97% real RTP.

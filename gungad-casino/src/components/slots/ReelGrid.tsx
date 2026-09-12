@@ -9,6 +9,8 @@ import {
 
 const STRIP_EXTRA = 36;
 const FILLER_SYMBOLS: BanditSymbol[] = SYMBOLS.filter((s) => s !== 'jackpot');
+/** Jackpot symbols scroll past during the spin (visual bait only — landing is decided by the engine) */
+const FILLER_JACKPOT_RATE = 0.12;
 
 interface ReelGridProps {
   /** Final 3×3 grid (col-major). Must be set BEFORE spinId increments. */
@@ -23,6 +25,7 @@ interface ReelGridProps {
 }
 
 function randomSymbol(): BanditSymbol {
+  if (Math.random() < FILLER_JACKPOT_RATE) return 'jackpot';
   return FILLER_SYMBOLS[Math.floor(Math.random() * FILLER_SYMBOLS.length)];
 }
 
@@ -111,7 +114,7 @@ export const SymbolFace: React.FC<{
           </>
         )}
         {symbol === 'jackpot' && (
-          <image href="/assets/jackpot-crystal.png" x="6" y="6" width="88" height="88" preserveAspectRatio="xMidYMid meet" />
+          <image href="/assets/jackpot.jpg" x="6" y="6" width="88" height="88" preserveAspectRatio="xMidYMid slice" />
         )}
       </svg>
       {highlight && (

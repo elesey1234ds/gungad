@@ -184,23 +184,27 @@ export const SlotsGame: React.FC<SlotsGameProps> = ({
         <div className="hidden sm:block w-16" />
       </div>
 
-      <div className="relative flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-4 gap-3 min-h-0 overflow-hidden">
-        <div className="flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-950/70 pl-1.5 pr-4 py-1 shadow-[0_0_28px_rgba(56,189,248,0.35)]">
-          <img src="/assets/jackpot-crystal.png" alt="" className="h-7 w-7 object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
-          <span className="font-display font-black text-sky-100 tracking-wider text-xs sm:text-sm uppercase">
-            {t('slotsJackpotBanner', lang)}
-          </span>
-        </div>
-        <div className="relative w-full max-w-lg shrink min-h-0">
-          <ReelGrid
-            grid={grid}
-            spinId={spinId}
-            winLine={winLine}
-            spinDurationMs={SPIN_MS}
-            staggerMs={STAGGER}
-            onReelStop={handleReelStop}
-            onSpinComplete={settle}
-          />
+      <div className="relative flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-2 gap-2 min-h-0 overflow-hidden">
+        {currency === 'STARS' && (
+          <div className="flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-950/70 pl-1.5 pr-4 py-1 shadow-[0_0_28px_rgba(56,189,248,0.35)] shrink-0">
+            <img src="/assets/jackpot.jpg" alt="Jackpot" className="h-9 w-9 rounded-full object-cover drop-shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
+            <span className="font-display font-black text-sky-100 tracking-wider text-xs sm:text-sm uppercase">
+              {t('slotsJackpotBanner', lang)}
+            </span>
+          </div>
+        )}
+        <div className="relative w-full min-h-0 flex items-center justify-center" style={{ maxWidth: 512 }}>
+          <div className="w-full min-w-0" style={{ maxWidth: 'max(240px, min(100%, calc(100dvh - 330px)))' }}>
+            <ReelGrid
+              grid={grid}
+              spinId={spinId}
+              winLine={winLine}
+              spinDurationMs={SPIN_MS}
+              staggerMs={STAGGER}
+              onReelStop={handleReelStop}
+              onSpinComplete={settle}
+            />
+          </div>
           {jackpotNotice && !spinning && (
             <div className="pointer-events-none absolute inset-x-0 top-[30%] z-40 flex justify-center">
               <span className="px-4 py-2 rounded-xl bg-sky-950/90 border border-sky-300 font-display font-black text-xl text-sky-200">
