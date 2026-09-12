@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '../../database/supabase.js';
 import config from '../../config/config.js';
 import logger from '../../utils/logger.js';
 import { assertProfileOwnership } from './telegramAuth.js';
+import { getTonUsdRate } from '../../services/tonMonitor.js';
 
 const router = express.Router();
 const TON_ADDRESS = (process.env.TON_RECEIVING_ADDRESS || '').trim();
