@@ -301,7 +301,7 @@ export const RouletteGame: React.FC<RouletteGameProps> = ({
         {/* Wheel */}
         <div className="relative bg-[#0d0d12] border border-rose-900/40 rounded-2xl p-3 flex flex-col items-center justify-center overflow-hidden shadow-2xl red-border-glow">
           <div className="absolute top-2 z-20 left-1/2 -translate-x-1/2">
-            <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-rose-600 drop-shadow-[0_0_8px_rgba(225,29,72,0.9)]" />
+            <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-[#E50914]" />
           </div>
 
           <div

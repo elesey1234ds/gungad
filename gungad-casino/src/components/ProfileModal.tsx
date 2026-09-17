@@ -3,7 +3,9 @@ import { Currency, UserProfile, BetHistoryItem } from '../types';
 import { t } from '../translations';
 import { CURRENCIES, formatCurrency, formatStars } from '../utils/currencies';
 import { soundFx } from '../utils/sound';
-import { X, Crown, Crosshair, History, Loader2 } from 'lucide-react';
+import { X, Crown, Crosshair, History } from 'lucide-react';
+import { BottomSheet } from './ui/BottomSheet';
+import { Skeleton } from './ui/Skeleton';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://gungad-production.up.railway.app';
 
@@ -74,14 +76,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const fiatSymbol = currency === 'STARS' ? CURRENCIES.USD.symbol : CURRENCIES[currency].symbol;
 
   return (
-    <div
-      className="fixed inset-0 z-[350] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full sm:max-w-xl bg-[#0e0e12] border border-rose-900/50 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col text-zinc-100 max-h-[min(92dvh,920px)] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={onClose} panelClassName="sm:max-w-xl">
         {/* Sticky header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-zinc-800 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
@@ -165,8 +160,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </span>
 
             {loadingHistory ? (
-              <div className="flex justify-center py-6">
-                <Loader2 className="w-5 h-5 text-rose-500 animate-spin" />
+              <div className="flex flex-col gap-1.5 py-1" aria-hidden>
+                <Skeleton className="h-11 w-full" />
+                <Skeleton className="h-11 w-full" />
+                <Skeleton className="h-11 w-full" />
               </div>
             ) : displayHistory.length === 0 ? (
               <p className="text-xs text-zinc-500 italic p-4 text-center bg-[#121217] rounded-xl border border-zinc-800">
@@ -197,7 +194,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   );
 };

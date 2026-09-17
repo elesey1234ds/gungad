@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Currency, UserProfile } from '../types';
+import { BottomSheet } from './ui/BottomSheet';
 import { t } from '../translations';
 import { formatStars } from '../utils/currencies';
 import { soundFx } from '../utils/sound';
@@ -488,17 +489,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   };
 
   const inputCls =
-    'w-full bg-[#121217] border border-zinc-800 focus:border-rose-600 text-white font-mono text-base font-bold rounded-xl px-3 py-2.5 outline-none';
+    'w-full bg-[#121218] border border-white/10 focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B] text-white font-mono text-base font-bold rounded-xl px-3 py-2.5 outline-none transition-colors';
 
   return (
-    <div
-      className="fixed inset-0 z-[350] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full sm:max-w-lg bg-[#0e0e12] border border-rose-900/50 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col text-zinc-100 max-h-[min(85dvh,720px)] md:max-h-[min(90dvh,760px)] mb-[4.5rem] md:mb-0 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={onClose}>
         {/* Modal Header */}
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-800 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
@@ -526,7 +520,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
               onClick={() => { soundFx.playClick(); setTab('deposit'); }}
               className={`py-2 text-xs font-display font-bold uppercase rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 tab === 'deposit'
-                  ? 'bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.5)]'
+                  ? 'bg-[#E50914] text-white shadow-[0_4px_14px_rgba(0,0,0,0.45)] active:scale-[0.98]'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -537,7 +531,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
               onClick={() => { soundFx.playClick(); setTab('withdraw'); }}
               className={`py-2 text-xs font-display font-bold uppercase rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 tab === 'withdraw'
-                  ? 'bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.5)]'
+                  ? 'bg-[#E50914] text-white shadow-[0_4px_14px_rgba(0,0,0,0.45)] active:scale-[0.98]'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -573,38 +567,35 @@ export const DepositModal: React.FC<DepositModalProps> = ({
 
           {tab === 'deposit' ? (
             <div className="flex flex-col gap-4">
-              {/* Payment method selector — circular emblems */}
-              <div className="grid grid-cols-4 gap-2">
+              {/* Payment methods — large tiles with descriptive ribbons */}
+              <div className="grid grid-cols-2 gap-2">
                 {PAY_METHODS.map((item) => {
                   const active = method === item.id;
+                  const hint =
+                    item.id === 'stars' ? 'Telegram' :
+                    item.id === 'cryptobot' ? 'USDT · TON · BTC · ETH · SOL' :
+                    item.id === 'tonkeeper' ? 'TON · USDT · Memo' : 'Ручной · по TXID';
                   return (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => { soundFx.playClick(); setMethod(item.id); resetDepositFlow(); }}
-                      className="flex flex-col items-center gap-1.5 group"
+                      className={`gg-console-btn flex items-center gap-3 p-3 min-h-[68px] rounded-2xl text-left touch-manipulation ${
+                        active ? 'gg-console-btn-selected gg-win-in' : ''
+                      }`}
                     >
-                      <span
-                        className={`relative h-14 w-14 rounded-full overflow-hidden border-2 transition-all ${
-                          active
-                            ? 'border-rose-500 shadow-[0_0_16px_rgba(225,29,72,0.45)] scale-105'
-                            : 'border-zinc-700 group-hover:border-zinc-500'
-                        }`}
-                      >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#0D0D11] border border-white/10">
                         {item.img ? (
-                          <img
-                            src={item.img}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
+                          <img src={item.img} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <span className="flex h-full w-full items-center justify-center bg-amber-500/20">
-                            <Star className="h-7 w-7 text-amber-400 fill-amber-400" />
-                          </span>
+                          <Star className="h-6 w-6 text-amber-400 fill-amber-400" />
                         )}
                       </span>
-                      <span className={`text-[10px] font-bold leading-tight text-center ${active ? 'text-white' : 'text-zinc-400'}`}>
-                        {t(item.labelKey as any, lang)}
+                      <span className="flex flex-col min-w-0">
+                        <span className={`text-xs font-bold truncate ${active ? 'text-white' : 'text-zinc-200'}`}>
+                          {t(item.labelKey as any, lang)}
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-500 truncate">{hint}</span>
                       </span>
                     </button>
                   );
@@ -619,6 +610,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 <input
                   type="number"
                   min={1}
+                  inputMode="decimal"
+                  enterKeyHint="done"
                   value={depositAmount}
                   onChange={(e) => { setDepositAmount(parseFloat(e.target.value) || 0); resetDepositFlow(); }}
                   className={inputCls}
@@ -628,7 +621,9 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                     <button
                       key={v}
                       onClick={() => { soundFx.playClick(); setDepositAmount(v); resetDepositFlow(); }}
-                      className="flex-1 py-1.5 text-[11px] font-mono font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-300"
+                      className={`gg-console-btn flex-1 py-2 min-h-[44px] text-xs font-mono font-bold rounded-xl touch-manipulation ${
+                        depositAmount === v ? 'gg-console-btn-selected text-rose-200' : 'text-zinc-300'
+                      }`}
                     >
                       ${v}
                     </button>
@@ -649,13 +644,13 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                         <button
                           type="button"
                           onClick={() => copyText(trc20Address, 'trc20')}
-                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-md flex items-center gap-1 shrink-0"
+                          className="px-2 py-1 min-h-[32px] bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-md flex items-center gap-1 shrink-0 touch-manipulation transition-colors"
                         >
                           {copiedField === 'trc20' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <input value={trc20Txid} onChange={(e) => setTrc20Txid(e.target.value)} placeholder={t('trc20TxidPlaceholder', lang)} className={inputCls} />
-                      <button onClick={handleCreateTrc20} disabled={!isReal || creating || !trc20Txid.trim()} className="w-full py-3 bg-emerald-600 text-white font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50">
+                      <input value={trc20Txid} onChange={(e) => setTrc20Txid(e.target.value)} placeholder={t('trc20TxidPlaceholder', lang)} autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" className={inputCls} />
+                      <button onClick={handleCreateTrc20} disabled={!isReal || creating || !trc20Txid.trim()} className="w-full py-3 min-h-[48px] bg-emerald-700 hover:bg-emerald-600 active:scale-[0.98] text-white font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50 transition-all touch-manipulation">
                         {creating ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t('trc20Submit', lang)}
                       </button>
                     </>
@@ -674,7 +669,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                           onClick={() => { soundFx.playClick(); setSelectedCoin(coin); resetDepositFlow(); }}
                           className={`py-2 rounded-xl border text-[11px] font-mono font-bold transition-all ${
                             selectedCoin === coin
-                              ? 'bg-rose-950 border-rose-600 text-rose-300 shadow-[0_0_10px_rgba(225,29,72,0.3)]'
+                              ? 'bg-rose-950 border-[#E50914] text-rose-200'
                               : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                           }`}
                         >
@@ -685,14 +680,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                   </div>
 
                   {depositDone ? (
-                    <div className="p-4 bg-emerald-950 border border-emerald-600 text-emerald-300 text-sm font-bold rounded-xl text-center">
+                    <div className="gg-win-in p-4 bg-emerald-950/60 border border-emerald-800/70 text-emerald-300 text-sm font-bold rounded-xl text-center">
                       ✅ {t('depositCredited', lang)}
                     </div>
                   ) : invoiceUrl ? (
                     <div className="flex flex-col gap-2">
                       <button
                         onClick={() => { soundFx.playClick(); openTgLink(invoiceUrl); }}
-                        className="w-full py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(2,132,199,0.4)] transition-all flex items-center justify-center gap-2"
+                        className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl flex items-center justify-center gap-2 touch-manipulation"
                       >
                         <ExternalLink className="w-4 h-4" />
                         {t('openInvoice', lang)}
@@ -706,7 +701,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                     <button
                       onClick={handleCreateCryptoBot}
                       disabled={!isReal || creating || depositAmount < 1}
-                      className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.5)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
                     >
                       {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
                       {creating ? t('creatingInvoice', lang) : t('createInvoice', lang)}
@@ -723,7 +718,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                         key={asset}
                         type="button"
                         onClick={() => { soundFx.playClick(); setTonAsset(asset); resetDepositFlow(); }}
-                        className={`py-2 rounded-xl border text-xs font-mono font-bold ${tonAsset === asset ? 'bg-cyan-950 border-cyan-500 text-cyan-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}
+                        className={`py-2 min-h-[44px] rounded-xl border text-xs font-mono font-bold touch-manipulation transition-all active:scale-[0.97] ${tonAsset === asset ? 'bg-rose-950 border-[#E50914] text-rose-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}
                       >
                         {asset === 'TON' ? t('tonAssetGram', lang) : t('tonAssetUsdt', lang)}
                       </button>
@@ -733,13 +728,13 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                     <button
                       onClick={handleCreateTon}
                       disabled={!isReal || creating || depositAmount < 1}
-                      className="w-full py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(8,145,178,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
                     >
                       {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gem className="w-4 h-4" />}
                       {creating ? t('creatingInvoice', lang) : t('createInvoice', lang)}
                     </button>
                   ) : depositDone ? (
-                    <div className="p-4 bg-emerald-950 border border-emerald-600 text-emerald-300 text-sm font-bold rounded-xl text-center">
+                    <div className="gg-win-in p-4 bg-emerald-950/60 border border-emerald-800/70 text-emerald-300 text-sm font-bold rounded-xl text-center">
                       ✅ {t('depositCredited', lang)}
                     </div>
                   ) : (
@@ -748,7 +743,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                       <div className="bg-[#121217] border border-zinc-800 rounded-xl p-3.5 flex flex-col gap-1">
                         <span className="text-[10px] text-zinc-500 font-bold uppercase">{tonInvoice.asset === 'TON' ? t('tonSendExact', lang) : t('usdtTonSendExact', lang)}</span>
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-lg font-black text-cyan-300">
+                          <span className="font-mono text-lg font-black text-white">
                           {tonInvoice.asset === 'TON' ? `${tonInvoice.ton_amount} TON` : `${tonInvoice.token_amount} USDT`}
                         </span>
                           <span className="text-xs text-zinc-500 font-mono">≈ ${tonInvoice.usd_amount}</span>
@@ -786,7 +781,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
 
                       <button
                         onClick={() => { soundFx.playClick(); openTgLink(tonInvoice.tonkeeper_web_url); }}
-                        className="w-full py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(8,145,178,0.4)] transition-all flex items-center justify-center gap-2"
+                        className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl flex items-center justify-center gap-2 touch-manipulation"
                       >
                         <ExternalLink className="w-4 h-4" />
                         {t('openTonkeeper', lang)}
@@ -812,16 +807,20 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                       min={1}
                       max={10000}
                       step={1}
+                      inputMode="numeric"
+                      enterKeyHint="done"
                       value={starsAmount}
                       onChange={(e) => { setStarsAmount(parseInt(e.target.value, 10) || 0); resetDepositFlow(); }}
                       className={inputCls}
                     />
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-5 gap-1.5">
                       {[50, 100, 250, 500, 1000].map((v) => (
                         <button
                           key={v}
                           onClick={() => { soundFx.playClick(); setStarsAmount(v); resetDepositFlow(); }}
-                          className="flex-1 py-1.5 text-[11px] font-mono font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-300"
+                          className={`gg-console-btn py-2 min-h-[44px] text-[11px] font-mono font-bold rounded-xl touch-manipulation ${
+                            starsAmount === v ? 'gg-console-btn-selected text-rose-200' : 'text-zinc-300'
+                          }`}
                         >
                           ⭐{v}
                         </button>
@@ -832,7 +831,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                   </div>
 
                   {depositDone ? (
-                    <div className="p-4 bg-emerald-950 border border-emerald-600 text-emerald-300 text-sm font-bold rounded-xl text-center">
+                    <div className="gg-win-in p-4 bg-emerald-950/60 border border-emerald-800/70 text-emerald-300 text-sm font-bold rounded-xl text-center">
                       ✅ {t('starsCredited', lang)}
                     </div>
                   ) : starsInvoiceUrl ? (
@@ -845,7 +844,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                             onStarsBalance?.(starsBaselineRef.current + starsAmount * 100);
                           });
                         }}
-                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2"
+                        className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl flex items-center justify-center gap-2 touch-manipulation"
                       >
                         <ExternalLink className="w-4 h-4" />
                         {t('openInvoice', lang)}
@@ -859,7 +858,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                     <button
                       onClick={handleCreateStars}
                       disabled={!isReal || creating || starsAmount < 1}
-                      className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
                     >
                       {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4 fill-current" />}
                       {creating ? t('creatingInvoice', lang) : t('payWithStars', lang)}
@@ -887,8 +886,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                       className={`py-2 rounded-xl border text-xs font-mono font-bold transition-all ${
                         withdrawAsset === a
                           ? a === 'STARS'
-                            ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-                            : 'bg-rose-950 border-rose-600 text-rose-300 shadow-[0_0_10px_rgba(225,29,72,0.3)]'
+                            ? 'bg-amber-950/60 border-amber-600/70 text-amber-200'
+                            : 'bg-rose-950 border-[#E50914] text-rose-200'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                       }`}
                     >
@@ -904,6 +903,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 <input
                   type="text"
                   placeholder={t('enterDestination', lang)}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="done"
                   value={withdrawAddress}
                   onChange={(e) => setWithdrawAddress(e.target.value)}
                   className="w-full bg-[#121217] border border-zinc-800 focus:border-rose-600 text-white font-mono text-xs rounded-xl px-3 py-2.5 outline-none"
@@ -919,7 +922,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                         <button
                           key={v}
                           onClick={() => { soundFx.playClick(); setWithdrawStars(v); }}
-                          className={`py-1.5 text-[11px] font-mono font-bold bg-zinc-900 hover:bg-zinc-800 border rounded-lg text-zinc-300 ${withdrawStars === v ? 'border-rose-600 text-rose-300' : 'border-zinc-800'}`}
+                          className={`gg-console-btn py-2 min-h-[44px] text-[11px] font-mono font-bold rounded-xl touch-manipulation ${withdrawStars === v ? 'gg-console-btn-selected text-rose-200' : 'text-zinc-300'}`}
                         >
                           ⭐{v}
                         </button>
@@ -934,6 +937,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 <input
                   type="number"
                   min={7}
+                  inputMode="decimal"
+                  enterKeyHint="done"
                   value={withdrawAmountUSD}
                   onChange={(e) => setWithdrawAmountUSD(parseFloat(e.target.value) || 0)}
                   className={inputCls}
@@ -968,7 +973,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
               )}
 
               {withdrawSuccess && (
-                <div className="p-3 bg-emerald-950 border border-emerald-600 text-emerald-300 text-xs font-bold rounded-xl text-center">
+                <div className="gg-win-in p-3 bg-emerald-950/60 border border-emerald-800/70 text-emerald-300 text-xs font-bold rounded-xl text-center">
                   ✅ {t('withdrawRequested', lang)}
                 </div>
               )}
@@ -987,7 +992,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                     ? withdrawStars < 1 || withdrawStars * 100 > (user.starsBalance ?? 0)
                     : withdrawAmountUSD < 7 || withdrawAmountUSD > user.balanceUSD || !withdrawAddress)
                 }
-                className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.5)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
               >
                 {withdrawSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {t('requestWithdraw', lang)}
@@ -999,7 +1004,6 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   );
 };

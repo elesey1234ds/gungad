@@ -125,8 +125,8 @@ export const DiceGame: React.FC<DiceGameProps> = ({
                   : isRolling
                   ? 'text-rose-400'
                   : (mode === 'over' && lastRoll > targetValue) || (mode === 'under' && lastRoll < targetValue)
-                  ? 'text-emerald-400 drop-shadow-[0_0_30px_rgba(16,185,129,0.8)]'
-                  : 'text-rose-500 drop-shadow-[0_0_30px_rgba(225,29,72,0.8)]'
+                  ? 'text-emerald-400'
+                  : 'text-rose-500'
               }`}
             >
               {lastRoll !== null ? lastRoll.toFixed(2) : '50.00'}

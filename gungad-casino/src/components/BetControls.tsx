@@ -91,13 +91,13 @@ export const BetControls: React.FC<BetControlsProps> = ({
 
   const buttonStyle =
     actionColor === 'red'
-      ? 'bg-gradient-to-r from-red-600 via-rose-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.5)] border-rose-500/50'
+      ? 'gg-btn-primary'
       : actionColor === 'green'
-      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] border-emerald-500/50'
-      : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.5)] border-amber-500/50';
+      ? 'bg-emerald-700 hover:bg-emerald-600 text-white border border-emerald-800/70 shadow-[0_6px_18px_rgba(0,0,0,0.5)]'
+      : 'bg-amber-700 hover:bg-amber-600 text-white border border-amber-800/70 shadow-[0_6px_18px_rgba(0,0,0,0.5)]';
 
   return (
-    <div className={`bg-[#111115] border border-rose-900/30 rounded-2xl shadow-2xl flex flex-col ${
+    <div className={`bg-[#121218] border border-white/10 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.45)] flex flex-col ${
       compact ? 'p-3 gap-2.5' : 'p-4 md:p-5 gap-4'
     }${stretch ? ' lg:flex-1 lg:h-full' : ''}`}>
       {/* Label and Quick presets */}
@@ -118,59 +118,81 @@ export const BetControls: React.FC<BetControlsProps> = ({
         ) : null}
       </div>
 
-      {/* Input + Multiplier buttons */}
-      <div className={`flex flex-col gap-2${stretch ? ' lg:flex-1' : ''}`}>
-        <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold">
-            {currentCurrencyConfig.symbol}
-          </span>
-          <input
-            type="number"
-            step="any"
-            value={displayAmount ? Number(displayAmount.toFixed(2)) : ''}
-            onChange={handleInputChange}
+      {/* Console stepper + quick stakes */}
+      <div className={`flex flex-col gap-2.5${stretch ? ' lg:flex-1' : ''}`}>
+        <div className="flex items-stretch gap-2">
+          <button
+            type="button"
+            onClick={() => { soundFx.playClick(); onBetAmountChangeUSD(Math.max(minBetUSD, betAmountUSD - minBetUSD)); }}
             disabled={disabled}
-            placeholder="0.00"
-            className={`w-full bg-[#0a0a0d] border border-zinc-800 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 text-white font-mono font-bold rounded-xl pl-9 pr-3 outline-none transition-all disabled:opacity-50 ${
-              compact ? 'text-base py-2' : 'text-lg py-2.5'
-            }`}
-          />
+            aria-label="−"
+            className="gg-console-btn w-12 shrink-0 rounded-2xl text-xl font-black text-zinc-200 disabled:opacity-50 touch-manipulation"
+          >
+            −
+          </button>
+          <div className="relative flex-1">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-semibold">
+              {currentCurrencyConfig.symbol}
+            </span>
+            <input
+              type="number"
+              step="any"
+              inputMode="decimal"
+              enterKeyHint="done"
+              value={displayAmount ? Number(displayAmount.toFixed(2)) : ''}
+              onChange={handleInputChange}
+              disabled={disabled}
+              placeholder="0.00"
+              className={`w-full bg-[#0D0D11] border border-white/10 focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B] text-white font-mono font-black rounded-2xl pl-9 pr-3 outline-none transition-all disabled:opacity-50 text-center ${
+                compact ? 'text-lg py-2.5' : 'text-xl py-3'
+              }`}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => { soundFx.playClick(); onBetAmountChangeUSD(Math.min(maxBetUSD, Math.min(userBalanceUSD, betAmountUSD + minBetUSD))); }}
+            disabled={disabled}
+            aria-label="+"
+            className="gg-console-btn w-12 shrink-0 rounded-2xl text-xl font-black text-zinc-200 disabled:opacity-50 touch-manipulation"
+          >
+            +
+          </button>
         </div>
 
-        {/* Preset buttons */}
+        {/* Quick stakes */}
         <div className="grid grid-cols-5 gap-1.5 shrink-0">
           <button
             onClick={handleMin}
             disabled={disabled}
-            className="px-2 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-bold text-zinc-300 hover:text-white rounded-lg transition-all active:scale-95 disabled:opacity-50"
+            className="gg-console-btn px-1 py-2 min-h-[44px] text-[11px] font-display font-bold uppercase text-zinc-300 rounded-xl disabled:opacity-50 touch-manipulation"
           >
             {t('min', lang)}
           </button>
           <button
             onClick={handleHalf}
             disabled={disabled}
-            className="px-2 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-bold text-zinc-300 hover:text-white rounded-lg transition-all active:scale-95 disabled:opacity-50"
+            className="gg-console-btn px-1 py-2 min-h-[44px] text-[11px] font-display font-bold uppercase text-zinc-300 rounded-xl disabled:opacity-50 touch-manipulation"
           >
             {t('half', lang)}
           </button>
           <button
             onClick={handleDouble}
             disabled={disabled}
-            className="px-2 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-bold text-zinc-300 hover:text-white rounded-lg transition-all active:scale-95 disabled:opacity-50"
+            className="gg-console-btn px-1 py-2 min-h-[44px] text-[11px] font-display font-bold uppercase text-zinc-300 rounded-xl disabled:opacity-50 touch-manipulation"
           >
             {t('double', lang)}
           </button>
           <button
             onClick={handle5X}
             disabled={disabled}
-            className="px-2 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-bold text-zinc-300 hover:text-white rounded-lg transition-all active:scale-95 disabled:opacity-50"
+            className="gg-console-btn px-1 py-2 min-h-[44px] text-[11px] font-display font-bold uppercase text-zinc-300 rounded-xl disabled:opacity-50 touch-manipulation"
           >
             {t('fiveX', lang)}
           </button>
           <button
             onClick={handleMax}
             disabled={disabled}
-            className="px-2 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-900/40 text-[11px] font-bold text-rose-400 hover:text-rose-200 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+            className="gg-console-btn gg-console-btn-selected px-1 py-2 min-h-[44px] text-[11px] font-display font-bold uppercase text-rose-200 rounded-xl disabled:opacity-50 touch-manipulation"
           >
             {t('max', lang)}
           </button>
@@ -201,7 +223,7 @@ export const BetControls: React.FC<BetControlsProps> = ({
               onAction();
             }}
             disabled={actionDisabled}
-            className={`${secondaryAction ? 'flex-1 basis-0 min-w-0' : 'w-full'} font-display font-black tracking-wider uppercase rounded-xl border transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`${secondaryAction ? 'flex-1 basis-0 min-w-0' : 'w-full'} font-display font-black tracking-wider uppercase rounded-xl border transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] touch-manipulation ${
               compact ? 'py-3 px-2 text-sm' : 'py-3.5 px-2 text-sm'
             } ${buttonStyle}`}
           >

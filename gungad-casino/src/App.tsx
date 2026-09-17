@@ -48,6 +48,7 @@ function getTgPhotoUrl(): string | null {
   }
 }
 import { ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
+import { shareReferralLink } from './components/SettingsMenu';
 import { centsToUsd, usdToCents } from './types/database';
 import { CURRENCIES } from './utils/currencies';
 
@@ -270,6 +271,11 @@ export default function App() {
   const openSupport = () => { closeAllModals(); setSupportOpen(true); };
   const openBonus = () => { closeAllModals(); setBonusOpen(true); };
 
+  const handleInvite = useCallback(() => {
+    soundFx.playClick();
+    if (session?.telegram_id) shareReferralLink(session.telegram_id, lang);
+  }, [session?.telegram_id, lang]);
+
   const onlineCount = useGgOnline(
     session?.profile_id ?? null,
     SESSION_ID,
@@ -398,7 +404,7 @@ export default function App() {
   return (
     <>
     <div
-      className={`min-h-dvh bg-[#0a0a0a] text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white overflow-x-hidden max-w-[100vw] pb-[4.5rem] md:pb-0${!legalOk ? ' pointer-events-none select-none' : ''}`}
+      className={`min-h-dvh bg-[#0a0a0a] text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white overflow-x-hidden max-w-[100vw] pb-[6.5rem] md:pb-0${!legalOk ? ' pointer-events-none select-none' : ''}`}
       onPointerDown={() => { if (legalOk) soundFx.unlockAndStartMusic(); }}
       aria-hidden={!legalOk}
     >
@@ -481,20 +487,8 @@ export default function App() {
         }`}>
           <div className="pointer-events-none absolute inset-0 hidden lg:block bg-[radial-gradient(ellipse_at_50%_0%,rgba(225,29,72,0.08)_0%,transparent_55%)] opacity-90" />
           <div className="pointer-events-none absolute inset-0 hidden lg:block bg-[radial-gradient(#e11d48_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.06]" />
-          {activeTab === 'games' && !activeGameId && (
-            <div className="relative z-[1] bg-[#0e0e13] border border-rose-900/40 rounded-2xl px-5 sm:px-8 py-6 lg:py-0 overflow-hidden shadow-xl flex flex-col lg:flex-row items-center lg:items-center justify-center lg:justify-between text-center lg:text-left gap-4 lg:min-h-[160px] xl:min-h-[200px]">
-              <div className="absolute inset-0 bg-[radial-gradient(#e11d48_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.07] pointer-events-none" />
-              <RevolverLogo size="lg" className="relative z-[1]" />
-              <div className="relative z-[1] flex flex-col items-center lg:items-end gap-2">
-                <div className="flex items-center gap-1.5 text-sm font-mono font-bold text-zinc-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#22c55e] animate-pulse" />
-                  {onlineCount}
-                </div>
-                {status === 'loading' && (
-                  <span className="text-[10px] text-zinc-600 animate-pulse">Подключение…</span>
-                )}
-              </div>
-            </div>
+          {activeTab === 'games' && !activeGameId && status === 'loading' && (
+            <span className="relative z-[1] text-[10px] text-zinc-600 animate-pulse">Подключение…</span>
           )}
 
           {activeTab === 'game' && activeGameId && (
@@ -514,7 +508,15 @@ export default function App() {
           )}
 
           <div className="relative z-[1]">
-            {activeTab === 'games' && <GamesGrid onSelectGame={handleSelectGame} lang={lang} />}
+            {activeTab === 'games' && (
+              <GamesGrid
+                onSelectGame={handleSelectGame}
+                lang={lang}
+                onlineCount={onlineCount}
+                onOpenBonus={openBonus}
+                onInvite={handleInvite}
+              />
+            )}
 
             {activeTab === 'game' && activeGameId === 'crash'     && <CrashGame     {...crashProps} />}
             {activeTab === 'game' && activeGameId === 'roulette'  && <RouletteGame  {...gameProps} />}
@@ -616,7 +618,7 @@ export default function App() {
         onClick={() => setPokerLockedOpen(false)}
       >
         <div
-          className="w-full max-w-sm rounded-2xl border border-rose-600/60 bg-[#12080c] p-6 shadow-[0_0_40px_rgba(225,29,72,0.35)] text-center"
+          className="gg-win-in w-full max-w-sm rounded-2xl border border-[#991B1B]/60 bg-[#121218] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.65)] text-center"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-rose-600 text-white flex items-center justify-center animate-lock-glow">
@@ -631,7 +633,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setPokerLockedOpen(false)}
-            className="mt-5 w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-display font-bold uppercase"
+            className="gg-btn-primary mt-5 w-full py-2.5 min-h-[44px] rounded-xl text-white text-sm font-display font-bold uppercase touch-manipulation"
           >
             {t('pokerLocked', lang)}
           </button>

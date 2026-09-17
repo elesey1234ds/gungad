@@ -389,7 +389,7 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
       </div>
 
       <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col gap-2.5">
-        <div className="relative bg-[#0b130e] border border-rose-900/40 rounded-2xl p-4 sm:p-5 min-h-[280px] sm:min-h-[320px] flex flex-col justify-between gap-4 overflow-hidden shadow-2xl red-border-glow">
+        <div className="relative bg-[#0b130e] border border-white/10 rounded-2xl p-4 sm:p-5 min-h-[280px] sm:min-h-[320px] flex flex-col justify-between gap-4 overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
           <div className="absolute inset-0 bg-[radial-gradient(#152e1f_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
 
           {/* Dealer Area */}
@@ -429,8 +429,8 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
           )}
 
           {resultMessage && (
-            <div className="relative z-20 text-center">
-              <span className="font-display font-black text-2xl md:text-3xl text-rose-500 uppercase tracking-widest drop-shadow-[0_0_20px_rgba(225,29,72,0.8)]">
+            <div className="gg-win-in relative z-20 text-center">
+              <span className="font-display font-black text-2xl md:text-3xl text-rose-400 uppercase tracking-widest">
                 {resultMessage}
               </span>
             </div>

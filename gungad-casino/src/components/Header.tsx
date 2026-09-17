@@ -39,7 +39,7 @@ const LANG_CODES: Record<Language, string> = {
   kk: 'KZ',
 };
 
-const navBtnCls = 'flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[52px] touch-manipulation select-none';
+const navBtnCls = 'relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[56px] rounded-2xl touch-manipulation select-none active:scale-[0.94] transition-all';
 
 export const Header: React.FC<HeaderProps> = ({
   user,
@@ -98,7 +98,8 @@ export const Header: React.FC<HeaderProps> = ({
       {/* ─── Top bar ─────────────────────────────────── */}
       <header
         ref={topRef}
-        className="sticky top-0 z-[200] bg-[#0a0a0d]/98 backdrop-blur-xl border-b border-rose-900/30"
+        className="sticky top-0 z-[200] bg-[#0D0D11]/95 backdrop-blur-xl border-b border-white/10"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="w-full px-3 sm:px-5 lg:px-6 py-2 flex items-center justify-between gap-2 min-w-0">
           {/* Left: menu (desktop) + logo */}
@@ -136,37 +137,39 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             )}
 
-            {/* Balance chip + currency picker */}
+            {/* Balance capsule + quick deposit */}
             <div className="relative flex items-center">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); soundFx.playClick(); setCurrOpen(v => !v); setLangOpen(false); }}
-                className="flex items-center gap-1 sm:gap-1.5 bg-[#121217] border border-rose-900/40 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl touch-manipulation"
-              >
-                <Wallet className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                <span className="font-mono font-bold text-white text-[10px] sm:text-xs whitespace-nowrap">
-                  {currency === 'STARS'
-                    ? formatStars(user.balanceUSD)
-                    : formatCurrency(user.balanceUSD, currency)}
-                </span>
-                {playMode === 'real' && currency !== 'STARS' && (
-                  <span className="font-mono text-[10px] text-amber-300 whitespace-nowrap">
-                    {formatStars(user.starsBalance / 100)}
-                  </span>
-                )}
-                <ChevronDown className="w-2.5 h-2.5 text-zinc-500 shrink-0" />
-              </button>
-
-              {/* Deposit button — desktop only; mobile uses bottom nav */}
-              {playMode === 'real' && (
+              <div className="gg-capsule flex items-center gap-1 rounded-2xl pl-2.5 pr-1 py-1">
                 <button
                   type="button"
-                  onClick={() => { soundFx.playClick(); onOpenDeposit(); }}
-                  className="hidden sm:inline-flex ml-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide bg-gradient-to-r from-rose-600 to-rose-700 text-white whitespace-nowrap touch-manipulation"
+                  onClick={(e) => { e.stopPropagation(); soundFx.playClick(); setCurrOpen(v => !v); setLangOpen(false); }}
+                  className="flex items-center gap-1 sm:gap-1.5 touch-manipulation transition-all active:scale-[0.97]"
                 >
-                  {t('deposit', lang)}
+                  <Wallet className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span className="font-mono font-bold text-white text-xs sm:text-sm whitespace-nowrap">
+                    {currency === 'STARS'
+                      ? formatStars(user.balanceUSD)
+                      : formatCurrency(user.balanceUSD, currency)}
+                  </span>
+                  {playMode === 'real' && currency !== 'STARS' && (
+                    <span className="font-mono text-[10px] text-amber-300 whitespace-nowrap">
+                      {formatStars(user.starsBalance / 100)}
+                    </span>
+                  )}
+                  <ChevronDown className="w-3 h-3 text-zinc-500 shrink-0" />
                 </button>
-              )}
+
+                {playMode === 'real' && (
+                  <button
+                    type="button"
+                    onClick={() => { soundFx.playClick(); onOpenDeposit(); }}
+                    aria-label={t('deposit', lang)}
+                    className="gg-btn-primary flex h-8 w-8 items-center justify-center rounded-xl text-lg font-black leading-none touch-manipulation"
+                  >
+                    +
+                  </button>
+                )}
+              </div>
 
               {currOpen && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-[#111116] border border-zinc-800 rounded-2xl shadow-2xl p-1.5 z-[300]">
@@ -232,13 +235,13 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* ─── Mobile bottom navigation ─────────────────── */}
-      {/* Always rendered, fixed at bottom; md+ hides it */}
+      {/* ─── Floating dock ─────────────────────────────────── */}
+      {/* Always rendered, floats above content; md+ hides it */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-[200] bg-[#0a0a0d]/98 backdrop-blur-xl border-t border-rose-900/40"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="md:hidden fixed left-4 right-4 z-[200]"
+        style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
       >
-        <div className="grid grid-cols-4 w-full max-w-lg mx-auto">
+        <div className="gg-dock grid grid-cols-4 w-full max-w-lg mx-auto rounded-3xl px-2 py-1.5">
           {/* Menu drawer */}
           <SettingsMenu
             lang={lang}
@@ -257,9 +260,9 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={goHome}
-            className={`${navBtnCls} ${onHome ? 'text-rose-400' : 'text-zinc-400'}`}
+            className={`${navBtnCls} ${onHome ? 'bg-rose-950/70 text-white' : 'text-zinc-500'}`}
           >
-            <Home className="w-5 h-5" />
+            <Home className={onHome ? 'w-6 h-6' : 'w-5 h-5'} />
             <span className="text-[10px] font-semibold leading-none">{t('navHome', lang)}</span>
           </button>
 
@@ -267,9 +270,9 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => { soundFx.unlockAndStartMusic(); soundFx.playClick(); onOpenDeposit(); }}
-            className={`${navBtnCls} ${onDeposit ? 'text-rose-400' : 'text-zinc-400'}`}
+            className={`${navBtnCls} ${onDeposit ? 'bg-rose-950/70 text-white' : 'text-zinc-500'}`}
           >
-            <CircleDollarSign className="w-5 h-5" />
+            <CircleDollarSign className={onDeposit ? 'w-6 h-6' : 'w-5 h-5'} />
             <span className="text-[10px] font-semibold leading-none">{t('deposit', lang)}</span>
           </button>
 
@@ -277,9 +280,9 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => { soundFx.unlockAndStartMusic(); soundFx.playClick(); onOpenProfile(); }}
-            className={`${navBtnCls} ${onProfile ? 'text-rose-400' : 'text-zinc-400'}`}
+            className={`${navBtnCls} ${onProfile ? 'bg-rose-950/70 text-white' : 'text-zinc-500'}`}
           >
-            <UserRound className="w-5 h-5" />
+            <UserRound className={onProfile ? 'w-6 h-6' : 'w-5 h-5'} />
             <span className="text-[10px] font-semibold leading-none">{t('profile', lang)}</span>
           </button>
         </div>

@@ -169,7 +169,7 @@ export const SlotsGame: React.FC<SlotsGameProps> = ({
           ← {t('slotsBack', lang)}
         </button>
         <div className="text-center">
-          <h1 className="font-display font-black text-white text-sm sm:text-base tracking-wide uppercase drop-shadow-[0_0_12px_rgba(225,29,72,0.45)]">
+          <h1 className="font-display font-black text-white text-sm sm:text-base tracking-wide uppercase">
             {t('slotsName', lang)}
           </h1>
           <p className="text-[10px] text-zinc-500 font-mono">{t('slotsHint', lang)}</p>
@@ -186,8 +186,8 @@ export const SlotsGame: React.FC<SlotsGameProps> = ({
 
       <div className="relative flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-2 gap-2 min-h-0 overflow-hidden">
         {currency === 'STARS' && (
-          <div className="flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-950/70 pl-1.5 pr-4 py-1 shadow-[0_0_28px_rgba(56,189,248,0.35)] shrink-0">
-            <img src="/assets/jackpot-orb.png" alt="Jackpot" className="h-9 w-9 object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
+          <div className="flex items-center gap-2 rounded-full border border-[#991B1B]/60 bg-[#1A1A24]/80 shadow-[0_8px_24px_rgba(0,0,0,0.45)] pl-1.5 pr-4 py-1 shrink-0">
+            <img src="/assets/jackpot-orb.png" alt="Jackpot" className="h-9 w-9 object-contain" />
             <span className="font-display font-black text-sky-100 tracking-wider text-xs sm:text-sm uppercase">
               {t('slotsJackpotBanner', lang)}
             </span>
@@ -215,7 +215,7 @@ export const SlotsGame: React.FC<SlotsGameProps> = ({
 
           {lastWin > 0 && !spinning && (
             <div className="pointer-events-none absolute inset-x-0 top-[42%] z-40 flex justify-center">
-              <span className="px-3 py-1.5 rounded-xl bg-black/75 border border-emerald-500/40 font-display font-black text-xl sm:text-2xl text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.7)]">
+              <span className="gg-win-in px-3 py-1.5 rounded-xl bg-black/75 border border-emerald-700/60 font-display font-black text-xl sm:text-2xl text-emerald-400">
                 +{formatCurrency(lastWin, currency)}
               </span>
             </div>

@@ -53,7 +53,7 @@ function openSupport() {
   window.open(SUPPORT_URL, '_blank', 'noopener,noreferrer');
 }
 
-function shareReferralLink(telegramId: number, lang: Language) {
+export function shareReferralLink(telegramId: number, lang: Language) {
   const link = `https://t.me/${BOT_USERNAME}?start=ref${telegramId}`;
   const text = t('referralShareText', lang);
   const shareUrl =
@@ -251,13 +251,13 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
     <button
       type="button"
       onClick={openDrawer}
-      className={`relative flex w-full flex-col items-center justify-center gap-0.5 min-h-[52px] touch-manipulation select-none ${
-        open ? 'text-rose-400' : 'text-zinc-400'
+      className={`relative flex w-full flex-col items-center justify-center gap-0.5 min-h-[56px] rounded-2xl touch-manipulation select-none active:scale-[0.94] transition-all ${
+        open ? 'bg-rose-950/70 text-white' : 'text-zinc-500'
       }`}
       aria-label={t('menu', lang)}
     >
       <span className="relative inline-flex">
-        <Menu className="w-5 h-5" />
+        <Menu className={open ? 'w-6 h-6' : 'w-5 h-5'} />
         {welcomeBonusAvailable && <NotifBadge className="-top-2 -right-3" />}
       </span>
       <span className="text-[10px] font-semibold leading-none">{label ?? t('menu', lang)}</span>

@@ -216,8 +216,8 @@ export const MinesGame: React.FC<MinesGameProps> = ({
                   !tile.revealed
                     ? 'bg-zinc-900 border-zinc-800 hover:border-rose-600/70 hover:bg-zinc-800'
                     : tile.isMine
-                    ? 'bg-rose-950 border-rose-600 shadow-[0_0_12px_rgba(244,63,94,0.7)]'
-                    : 'bg-emerald-950/80 border-emerald-600/70 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                    ? 'bg-rose-950 border-[#E50914]'
+                    : 'bg-emerald-950/80 border-emerald-700/70'
                 }`}
               >
                 {tile.revealed ? (

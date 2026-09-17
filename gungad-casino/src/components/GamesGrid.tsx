@@ -3,14 +3,62 @@ import { GameInfo, GameId } from '../types';
 import { GAMES } from '../data/games';
 import { t } from '../translations';
 import { soundFx } from '../utils/sound';
-import { Play, Sparkles, Gem, Lock } from 'lucide-react';
+import { PromoCarousel } from './PromoCarousel';
+import {
+  Play,
+  Lock,
+  LayoutGrid,
+  Cherry,
+  Zap,
+  Spade,
+  Dices,
+} from 'lucide-react';
 
 interface GamesGridProps {
   onSelectGame: (id: GameId) => void;
   lang: any;
+  onlineCount?: number | null;
+  onOpenBonus?: () => void;
+  onInvite?: () => void;
 }
 
-/** Single game card. `slotBait` renders the "100X" bait overlay on slot art. */
+const PROMO_STYLE: Record<string, string> = {
+  hot: 'bg-[#E50914] text-white border-[#991B1B]/60',
+  new: 'bg-white text-black border-white/60',
+  top: 'bg-[#7F1D1D] text-white border-[#991B1B]/60',
+};
+
+type CategoryId = 'all' | 'slots' | 'quick' | 'poker' | 'board';
+
+const CATEGORIES: { id: CategoryId; icon: React.ReactNode }[] = [
+  { id: 'all', icon: <LayoutGrid className="w-4 h-4" /> },
+  { id: 'slots', icon: <Cherry className="w-4 h-4" /> },
+  { id: 'quick', icon: <Zap className="w-4 h-4" /> },
+  { id: 'poker', icon: <Spade className="w-4 h-4" /> },
+  { id: 'board', icon: <Dices className="w-4 h-4" /> },
+];
+
+function categoryLabel(id: CategoryId, lang: any): string {
+  switch (id) {
+    case 'all': return t('allCategories', lang);
+    case 'slots': return t('slotsCategory', lang);
+    case 'quick': return t('quickCategory', lang);
+    case 'poker': return t('pokerName', lang);
+    case 'board': return t('boardCategory', lang);
+  }
+}
+
+function filterByCategory(cat: CategoryId): GameInfo[] {
+  switch (cat) {
+    case 'all': return GAMES;
+    case 'slots': return GAMES.filter((g) => g.category === 'slots');
+    case 'quick': return GAMES.filter((g) => g.category === 'crash' || g.category === 'instant' || g.category === 'arcade');
+    case 'poker': return GAMES.filter((g) => g.locked);
+    case 'board': return GAMES.filter((g) => !g.locked && (g.category === 'table' || g.category === 'cards'));
+  }
+}
+
+/** Large 3D lobby card. Click anywhere → onSelectGame (same handler as before). */
 const GameCard: React.FC<{
   game: GameInfo;
   lang: any;
@@ -19,7 +67,6 @@ const GameCard: React.FC<{
 }> = ({ game, lang, onSelectGame, slotBait }) => {
   const titleKey = `${game.id}Name` as any;
   const gameTitle = t(titleKey, lang);
-
   const locked = Boolean(game.locked);
 
   return (
@@ -28,178 +75,142 @@ const GameCard: React.FC<{
         soundFx.playClick();
         onSelectGame(game.id);
       }}
-      className={`group relative bg-[#0e0e12] border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1.5 shadow-xl flex flex-col ${
-        locked
-          ? 'border-rose-700/80 hover:border-rose-500 shadow-[0_0_24px_rgba(225,29,72,0.25)]'
-          : 'border-rose-900/30 hover:border-rose-600/70 hover:shadow-[0_0_30px_rgba(225,29,72,0.3)]'
-      }`}
+      className="gg-card3d group relative cursor-pointer active:scale-[0.98] transition-transform"
     >
-      {/* Card Thumbnail — 16:9 on every viewport (phone + desktop) */}
-      <div className="relative w-full aspect-video overflow-hidden bg-zinc-900">
-        <img
-          src={game.image}
-          alt={gameTitle}
-          loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 ${locked ? 'grayscale-[.45] brightness-75' : ''}`}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e12] via-transparent to-transparent opacity-80" />
+      <div
+        className={`gg-card3d-inner relative overflow-hidden rounded-3xl border bg-[#121218] flex flex-col ${
+          locked ? 'border-[#991B1B]/70' : 'border-white/10'
+        }`}
+      >
+        {/* Art — 4:3 showcase */}
+        <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-900">
+          <img
+            src={game.image}
+            alt={gameTitle}
+            loading="lazy"
+            className={`absolute inset-0 w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-500 ${locked ? 'grayscale-[.45] brightness-75' : ''}`}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#121218] via-[#121218]/20 to-transparent" />
+          <div className="gg-card3d-glare" aria-hidden />
 
-        {/* "100X" bait — huge, eye-catching, centred on slot art */}
-        {slotBait && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span
-              className="font-display font-black italic text-5xl sm:text-6xl tracking-tighter text-amber-300 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] group-hover:scale-110 transition-transform duration-300"
-              style={{
-                textShadow:
-                  '0 0 22px rgba(251,191,36,0.9), 0 0 40px rgba(245,158,11,0.6), 0 2px 0 #000',
-              }}
-            >
+          {/* Promo tag */}
+          {game.promo && (
+            <span className={`absolute top-2.5 right-2.5 text-[10px] font-display font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-[0_4px_14px_rgba(0,0,0,0.5)] ${PROMO_STYLE[game.promo]}`}>
+              {game.promo}
+            </span>
+          )}
+
+          {/* RTP chip */}
+          <span className="absolute bottom-2.5 left-2.5 font-mono text-[10px] font-bold text-zinc-300 bg-black/60 border border-white/10 px-2 py-0.5 rounded-lg backdrop-blur-md">
+            RTP {game.rtp}
+          </span>
+
+          {slotBait && (
+            <span className="absolute bottom-2.5 right-2.5 font-display font-black italic text-sm text-white bg-[#7F1D1D]/90 border border-[#991B1B]/60 px-2.5 py-0.5 rounded-lg">
               100X
             </span>
-          </div>
-        )}
+          )}
 
-        {/* Badge */}
-        {game.badge && (
-          <span className="absolute top-3 left-3 bg-rose-950/90 border border-rose-600/70 text-rose-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg backdrop-blur-md shadow-md">
-            {t(game.badge as any, lang)}
-          </span>
-        )}
-
-        {locked ? (
-          <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-2">
-            <div className="w-16 h-16 rounded-2xl bg-rose-600/90 border-2 border-rose-300/80 text-white flex items-center justify-center animate-lock-glow shadow-[0_0_28px_rgba(225,29,72,0.85)]">
-              <Lock className="w-8 h-8" strokeWidth={2.4} />
+          {locked && (
+            <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-2">
+              <div className="w-14 h-14 rounded-2xl bg-[#7F1D1D] border border-[#991B1B]/60 text-white flex items-center justify-center animate-lock-glow">
+                <Lock className="w-7 h-7" strokeWidth={2.4} />
+              </div>
+              <span className="text-[10px] font-display font-black uppercase tracking-widest text-rose-200">
+                {t('pokerLocked', lang)}
+              </span>
             </div>
-            <span className="text-[11px] font-display font-black uppercase tracking-widest text-rose-200">
-              {t('pokerLocked', lang)}
-            </span>
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-rose-950/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-[0_0_25px_rgba(225,29,72,0.9)] transform group-hover:scale-110 transition-transform">
-              <Play className="w-6 h-6 ml-1 fill-current" />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Card Footer */}
-      <div className="p-4 flex flex-col justify-between flex-1 gap-3">
-        <div>
-          <h3 className="font-display font-black text-lg xl:text-xl text-white group-hover:text-rose-400 transition-colors uppercase">
-            {gameTitle}
-          </h3>
-          <p className="text-xs xl:text-sm text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-            {t(game.descriptionKey as any, lang)}
-          </p>
+          )}
         </div>
 
-        <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-end">
-          <button className={`px-3.5 py-1.5 xl:px-4 xl:py-2 border rounded-xl text-xs xl:text-sm font-display font-bold uppercase transition-all shadow-md ${
-            locked
-              ? 'bg-rose-950/80 text-rose-300 border-rose-600/60'
-              : 'bg-rose-600/20 group-hover:bg-rose-600 text-rose-400 group-hover:text-white border-rose-600/40'
-          }`}>
-            {locked ? t('pokerLocked', lang) : t('playNow', lang)}
-          </button>
+        {/* Body */}
+        <div className="flex items-center justify-between gap-2 px-3.5 py-3">
+          <div className="min-w-0">
+            <h3 className="font-display font-black text-sm sm:text-base text-white uppercase tracking-wide truncate group-hover:text-rose-200 transition-colors">
+              {gameTitle}
+            </h3>
+            <p className="text-[11px] text-zinc-500 truncate mt-0.5">
+              {t(game.descriptionKey as any, lang)}
+            </p>
+          </div>
+          {!locked && (
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#E50914] text-white shadow-[0_6px_18px_rgba(0,0,0,0.5)] border border-[#991B1B]/60 group-hover:scale-105 transition-transform">
+              <Play className="w-5 h-5 ml-0.5 fill-current" />
+            </span>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export const GamesGrid: React.FC<GamesGridProps> = ({ onSelectGame, lang }) => {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-
-  const filteredGames =
-    activeCategory === 'all'
-      ? GAMES
-      : GAMES.filter((g) => g.category === activeCategory);
-
-  const slotGames = GAMES.filter((g) => g.category === 'slots');
-
-  const categories = [
-    { id: 'all', labelKey: 'allCategories' },
-    { id: 'crash', labelKey: 'crashCategory' },
-    { id: 'table', labelKey: 'tableCategory' },
-    { id: 'cards', labelKey: 'cardsCategory' },
-    { id: 'instant', labelKey: 'instantCategory' },
-    { id: 'arcade', labelKey: 'arcadeCategory' },
-    { id: 'slots', labelKey: 'slotsCategory' },
-  ];
+export const GamesGrid: React.FC<GamesGridProps> = ({
+  onSelectGame,
+  lang,
+  onlineCount = null,
+  onOpenBonus,
+  onInvite,
+}) => {
+  const [activeCategory, setActiveCategory] = useState<CategoryId>('all');
+  const filteredGames = filterByCategory(activeCategory);
 
   return (
-    <section className="flex flex-col gap-10 my-2">
-      {/* ── ALL GAMES ─────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-6">
-        {/* Category Pills Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
-          <div>
-            <h2 className="font-display font-black text-2xl md:text-3xl text-white uppercase tracking-wider flex items-center gap-2.5">
-              <Sparkles className="w-6 h-6 text-rose-500" />
-              {t('popularGames', lang)}
-            </h2>
-          </div>
+    <section className="flex flex-col gap-5 my-2">
+      {/* ── Promo carousel ─────────────────────────────────────────── */}
+      <PromoCarousel
+        lang={lang}
+        onPlaySlots={() => onSelectGame('slots')}
+        onOpenBonus={() => onOpenBonus?.()}
+        onInvite={() => onInvite?.()}
+      />
 
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1.5 bg-[#111116] border border-zinc-800 p-1.5 rounded-2xl overflow-x-auto w-full sm:w-auto">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  soundFx.playClick();
-                  setActiveCategory(cat.id);
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-display font-bold uppercase transition-all shrink-0 ${
-                  activeCategory === cat.id
-                    ? 'bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.5)]'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                }`}
-              >
-                {t(cat.labelKey as any, lang)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Responsive Games Grid: 2→3→4 колонок (крупнее на десктопе) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-5">
-          {filteredGames.map((game) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              lang={lang}
-              onSelectGame={onSelectGame}
-              slotBait={game.category === 'slots'}
-            />
-          ))}
-        </div>
+      {/* ── Online + section title ─────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-display font-black text-xl md:text-2xl text-white uppercase tracking-wider">
+          {t('popularGames', lang)}
+        </h2>
+        {typeof onlineCount === 'number' && (
+          <span className="flex items-center gap-1.5 text-xs font-mono font-bold text-zinc-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            {onlineCount}
+          </span>
+        )}
       </div>
 
-      {/* ── SLOTS SECTION (after all games) ───────────────────────── */}
-      {slotGames.length > 0 && (
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
-            <h2 className="font-display font-black text-2xl md:text-3xl text-white uppercase tracking-wider flex items-center gap-2.5">
-              <Gem className="w-6 h-6 text-amber-400" />
-              {t('slotsCategory', lang)}
-            </h2>
-          </div>
+      {/* ── Category rail: horizontal scroll with icons ────────────── */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 pb-1">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => {
+              soundFx.playClick();
+              setActiveCategory(cat.id);
+            }}
+            className={`flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-display font-bold uppercase shrink-0 touch-manipulation transition-all active:scale-[0.96] border ${
+              activeCategory === cat.id
+                ? 'bg-[#E50914] text-white border-[#991B1B]/60 shadow-[0_4px_14px_rgba(0,0,0,0.45)]'
+                : 'bg-[#121218] text-zinc-400 border-white/10 hover:text-white'
+            }`}
+          >
+            {cat.icon}
+            {categoryLabel(cat.id, lang)}
+          </button>
+        ))}
+      </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-5">
-            {slotGames.map((game) => (
-              <GameCard
-                key={`slots-${game.id}`}
-                game={game}
-                lang={lang}
-                onSelectGame={onSelectGame}
-                slotBait
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ── Games grid ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+        {filteredGames.map((game) => (
+          <GameCard
+            key={game.id}
+            game={game}
+            lang={lang}
+            onSelectGame={onSelectGame}
+            slotBait={game.category === 'slots'}
+          />
+        ))}
+      </div>
     </section>
   );
 };

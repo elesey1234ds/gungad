@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { t } from '../translations';
 import { soundFx } from '../utils/sound';
+import { BottomSheet } from './ui/BottomSheet';
 import { X, ShieldCheck, Check, Copy, Key } from 'lucide-react';
 
 interface ProvablyFairModalProps {
@@ -33,8 +34,8 @@ export const ProvablyFairModal: React.FC<ProvablyFairModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-[#0e0e12] border border-rose-900/50 rounded-2xl shadow-2xl p-6 flex flex-col gap-5 text-zinc-100">
+    <BottomSheet onClose={onClose}>
+      <div className="p-6 flex flex-col gap-5 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
           <div className="flex items-center gap-2">
@@ -68,7 +69,7 @@ export const ProvablyFairModal: React.FC<ProvablyFairModalProps> = ({ isOpen, on
             type="text"
             value={clientSeed}
             onChange={(e) => setClientSeed(e.target.value)}
-            className="w-full bg-[#121217] border border-zinc-800 focus:border-rose-600 font-mono text-xs text-white rounded-xl px-3 py-2.5 outline-none"
+            className="w-full bg-[#121218] border border-white/10 focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B] font-mono text-xs text-white rounded-xl px-3 py-2.5 outline-none transition-colors"
           />
         </div>
 
@@ -89,7 +90,7 @@ export const ProvablyFairModal: React.FC<ProvablyFairModalProps> = ({ isOpen, on
         </div>
 
         {verified && (
-          <div className="p-3 bg-emerald-950 border border-emerald-600 text-emerald-300 text-xs font-bold rounded-xl text-center flex items-center justify-center gap-2">
+          <div className="gg-win-in p-3 bg-emerald-950/60 border border-emerald-800/70 text-emerald-300 text-xs font-bold rounded-xl text-center flex items-center justify-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             {t('verifiedFair', lang)}
           </div>
@@ -97,11 +98,11 @@ export const ProvablyFairModal: React.FC<ProvablyFairModalProps> = ({ isOpen, on
 
         <button
           onClick={handleVerify}
-          className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all"
+          className="w-full py-3 min-h-[48px] bg-emerald-700 hover:bg-emerald-600 active:scale-[0.98] text-white font-display font-bold uppercase text-sm rounded-xl border border-emerald-800/70 shadow-[0_6px_18px_rgba(0,0,0,0.5)] transition-all touch-manipulation"
         >
           {t('verify', lang)}
         </button>
       </div>
-    </div>
+    </BottomSheet>
   );
 };

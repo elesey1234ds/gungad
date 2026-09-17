@@ -4,6 +4,8 @@ import { Language } from '../types';
 import { t } from '../translations';
 import { soundFx } from '../utils/sound';
 import { X, LifeBuoy, Loader2, Send } from 'lucide-react';
+import { BottomSheet } from './ui/BottomSheet';
+import { Skeleton } from './ui/Skeleton';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://gungad-production.up.railway.app';
 
@@ -88,23 +90,14 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, lan
   const replied = tickets.filter((t) => t.reply_text);
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[550] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
-      onClick={close}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="relative w-full sm:max-w-md bg-[#0e0e12] border border-sky-900/50 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col text-zinc-100 overflow-hidden max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={close} panelClassName="sm:max-w-md" zClassName="z-[550]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
           <div className="flex items-center gap-2">
-            <LifeBuoy className="w-5 h-5 text-sky-400" />
+            <LifeBuoy className="w-5 h-5 text-rose-400" />
             <h3 className="font-display font-black text-lg uppercase tracking-wider text-white">
               {t('supportTitle', lang)}
             </h3>
-            <span className="text-[10px] font-bold text-sky-500 bg-sky-900/40 px-2 py-0.5 rounded-full">24/7</span>
+            <span className="text-[10px] font-bold text-rose-300 bg-rose-950/60 border border-[#991B1B]/50 px-2 py-0.5 rounded-full">24/7</span>
           </div>
           <button
             onClick={close}
@@ -131,13 +124,14 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, lan
           )}
 
           {loadingTickets && replied.length === 0 && (
-            <div className="flex justify-center py-2 text-zinc-500">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="flex flex-col gap-2 py-1" aria-hidden>
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
             </div>
           )}
 
           {sent ? (
-            <div className="p-4 bg-emerald-950 border border-emerald-600 text-emerald-300 text-sm font-bold rounded-xl text-center">
+            <div className="gg-win-in p-4 bg-emerald-950/60 border border-emerald-800/70 text-emerald-300 text-sm font-bold rounded-xl text-center">
               ✅ {t('supportSent', lang)}
             </div>
           ) : (
@@ -148,7 +142,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, lan
                 placeholder={t('supportPlaceholder', lang)}
                 rows={5}
                 maxLength={2000}
-                className="w-full bg-[#121217] border border-zinc-800 focus:border-sky-600 text-white text-sm rounded-xl px-3 py-2.5 outline-none resize-none"
+                className="w-full bg-[#121218] border border-white/10 focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B] text-white text-sm rounded-xl px-3 py-2.5 outline-none resize-none transition-colors"
               />
               {error && (
                 <div className="p-3 bg-rose-950/60 border border-rose-800 text-rose-300 text-xs font-bold rounded-xl text-center">
@@ -158,7 +152,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, lan
               <button
                 onClick={handleSend}
                 disabled={sending || message.trim().length < 3}
-                className="w-full py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 text-white font-display font-bold uppercase text-sm rounded-xl shadow-[0_0_15px_rgba(2,132,199,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="gg-btn-primary w-full py-3 min-h-[48px] font-display font-bold uppercase text-sm rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {t('supportSend', lang)}
@@ -166,8 +160,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, lan
             </>
           )}
         </div>
-      </div>
-    </div>,
+    </BottomSheet>,
     document.body,
   );
 };

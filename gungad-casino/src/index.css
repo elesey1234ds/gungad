@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* ═══════════════ GunGad Dark Luxury / Red Accent — design tokens (Tailwind v4) ═ */
+@theme {
+  --color-pitch: #0D0D11;      /* Background Pitch Black */
+  --color-surface: #121218;    /* Surface Dark */
+  --color-coal: #1A1A24;       /* Raised coal panel */
+  --color-primary: #E50914;    /* Primary Red (CTA) */
+  --color-primary-deep: #B00710;
+  --color-crimson: #DC2626;    /* Accent Crimson */
+  --color-maroon: #991B1B;     /* Deep ruby / focus rings */
+  --color-mist: #A1A1AA;       /* Muted text */
+  --radius-card: 1.125rem;
+  --radius-sheet: 1.5rem;
+}
+
+@layer base {
+  input, select, textarea {
+    font-size: 16px; /* prevent iOS Telegram WebView auto-zoom on focus */
+  }
+}
+
 @layer utilities {
   .font-display {
     font-family: 'Orbitron', 'Rajdhani', sans-serif;
@@ -9,17 +29,19 @@
   }
 }
 
-/* Custom Red Glows & Weapon Casino FX */
+/* Matte Dark-Luxury surfaces (legacy class names kept so game arenas don't break).
+   Nuclear glows removed: deep soft black shadows + hairline ruby edge only. */
 .red-glow {
-  box-shadow: 0 0 25px rgba(225, 29, 72, 0.35);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
 }
 
 .red-glow-lg {
-  box-shadow: 0 0 45px rgba(225, 29, 72, 0.55);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.6);
 }
 
 .red-border-glow {
-  box-shadow: inset 0 0 15px rgba(225, 29, 72, 0.25), 0 0 15px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: rgba(153, 27, 27, 0.45);
 }
 
 .bg-radial-dark {
@@ -65,17 +87,17 @@
 
 @keyframes lock-glow {
   0%, 100% {
-    transform: scale(1) rotate(-6deg);
-    filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.55));
+    transform: scale(1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   }
   50% {
-    transform: scale(1.14) rotate(6deg);
-    filter: drop-shadow(0 0 18px rgba(239, 68, 68, 1));
+    transform: scale(1.04);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   }
 }
 
 .animate-lock-glow {
-  animation: lock-glow 1.5s ease-in-out infinite;
+  animation: lock-glow 2.4s ease-in-out infinite;
 }
 
 @keyframes ref-stat-in {
@@ -263,4 +285,163 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ═══════════════ Dark Luxury shared UI ═══════════════════════════════ */
+
+/* Primary CTA: matte noble red, press compression, ruby focus ring */
+.gg-btn-primary {
+  background: #E50914;
+  color: #fff;
+  border: 1px solid rgba(153, 27, 27, 0.6);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+}
+.gg-btn-primary:hover { background: #C20812; }
+.gg-btn-primary:active { transform: scale(0.97); }
+.gg-btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #0D0D11, 0 0 0 4px #991B1B;
+}
+.gg-btn-primary:disabled { opacity: 0.5; }
+
+/* Strict dark card with hairline border; selected = ruby edge */
+.gg-card {
+  background: #121218;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.125rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.gg-card-selected {
+  border-color: #E50914;
+  box-shadow: 0 0 0 1px #991B1B, 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* BottomSheet enter motion (mobile: slide-up; desktop: fade-scale) */
+@keyframes gg-sheet-in {
+  from { opacity: 0; transform: translateY(28px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes gg-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gg-sheet-backdrop { animation: gg-backdrop-in 0.2s ease-out both; }
+.gg-sheet { animation: gg-sheet-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (min-width: 640px) {
+  @keyframes gg-sheet-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+/* Skeleton loader with dark-red pulse (no bright shimmer) */
+@keyframes gg-skeleton-pulse {
+  0%, 100% { background-color: #1A1A24; }
+  50% { background-color: #2A1216; }
+}
+.gg-skeleton {
+  border-radius: 0.75rem;
+  animation: gg-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+/* Muted win/loss feedback: warm red fade, no flashes */
+@keyframes gg-win-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.gg-win-in { animation: gg-win-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.gg-loss-dim { opacity: 0.75; transition: opacity 0.25s ease; }
+
+/* Balance counter tick (subtle) */
+@keyframes gg-balance-tick {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.gg-balance-tick { animation: gg-balance-tick 0.35s ease-out; }
+
+/* Drag handle for bottom sheets */
+.gg-sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.16);
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+
+/* ═══════════════ Lobby v2: promo carousel + 3D cards + console ═════════ */
+
+/* Promo slides: matte crimson-to-coal gradients + dot texture, no neon */
+.gg-promo-jackpot {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(229, 9, 20, 0.35) 0%, transparent 55%),
+    linear-gradient(120deg, #2A0A10 0%, #121218 70%);
+}
+.gg-promo-bonus {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(220, 38, 38, 0.28) 0%, transparent 55%),
+    linear-gradient(120deg, #221016 0%, #121218 70%);
+}
+.gg-promo-ref {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(153, 27, 27, 0.4) 0%, transparent 55%),
+    linear-gradient(120deg, #1B0D12 0%, #121218 70%);
+}
+.gg-promo-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* 3D game card: perspective tilt on hover (desktop), layered depth, top glare */
+.gg-card3d {
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+@media (hover: hover) {
+  .gg-card3d:hover .gg-card3d-inner {
+    transform: rotateX(4deg) rotateY(-4deg) translateY(-4px);
+  }
+}
+.gg-card3d-inner {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateZ(0);
+}
+.gg-card3d-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.09) 45%, transparent 60%);
+}
+
+/* Console volume button: layered slab with bottom edge, press travel */
+.gg-console-btn {
+  background: linear-gradient(180deg, #23232e 0%, #14141b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 2px solid rgba(153, 27, 27, 0.55);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.gg-console-btn:hover { border-color: rgba(229, 9, 20, 0.5); }
+.gg-console-btn:active { transform: translateY(2px); }
+.gg-console-btn-selected {
+  border-color: #E50914;
+  box-shadow: 0 0 0 1px #991B1B, 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating dock */
+.gg-dock {
+  background: rgba(18, 18, 24, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Balance capsule */
+.gg-capsule {
+  background: linear-gradient(180deg, #1c1c26 0%, #121218 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }

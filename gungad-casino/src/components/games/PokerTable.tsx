@@ -170,7 +170,7 @@ export const PokerTableView: React.FC<PokerTableProps> = ({
           return (
             <div key={seat.seatNo} className="absolute w-24 sm:w-28 text-center z-20" style={seatStyle(maxSeats, i)}>
               <div className={`mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                seat.isActor ? 'border-amber-400 bg-amber-950 text-amber-200 shadow-[0_0_16px_rgba(251,191,36,0.6)]' : 'border-zinc-600 bg-zinc-900 text-white'
+                seat.isActor ? 'border-amber-500/70 bg-amber-950/60 text-amber-200' : 'border-zinc-600 bg-zinc-900 text-white'
               } ${seat.folded ? 'opacity-40' : ''}`}>
                 {name.slice(0, 2).toUpperCase()}
               </div>

@@ -110,10 +110,10 @@ export const AgeGate: React.FC<AgeGateProps> = ({ lang, onAccepted }) => {
               className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white hover:border-rose-800/60 transition-colors"
             >
               <span className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-sky-400" />
+                <Shield className="w-4 h-4 text-rose-400" />
                 {t('ageGateReadPrivacy', lang)}
               </span>
-              <span className="text-sky-400">{t('ageGateOpenDoc', lang)} →</span>
+              <span className="text-rose-400">{t('ageGateOpenDoc', lang)} →</span>
             </button>
           </div>
 
@@ -125,7 +125,7 @@ export const AgeGate: React.FC<AgeGateProps> = ({ lang, onAccepted }) => {
             type="button"
             disabled={!canEnter}
             onClick={handleEnter}
-            className="w-full py-3.5 mt-1 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed text-white font-display font-black uppercase tracking-wider text-sm rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.35)] transition-all"
+            className="gg-btn-primary w-full py-3.5 min-h-[52px] mt-1 disabled:!bg-zinc-800 disabled:!border-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none text-white font-display font-black uppercase tracking-wider text-sm rounded-xl touch-manipulation"
           >
             {t('ageGateEnter', lang)}
           </button>

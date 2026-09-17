@@ -24,9 +24,9 @@ export const RevolverLogo: React.FC<RevolverLogoProps> = ({ size = 'md', classNa
       </span>
 
       <div className={`relative flex items-center justify-center shrink-0 ${sizeClasses.icon}`}>
-        <div className="absolute inset-0 rounded-full bg-rose-600/30 blur-md group-hover:bg-rose-600/60 transition-all duration-500 animate-pulse-red" />
+        <div className="absolute inset-0 rounded-full bg-rose-950/60 blur-md group-hover:bg-rose-900/60 transition-all duration-500" />
         <div className="relative w-full h-full animate-spin-slow group-hover:[animation-duration:3s] transition-all duration-300">
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <radialGradient id="metalGrad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#3f3f46" />
@@ -70,7 +70,7 @@ export const RevolverLogo: React.FC<RevolverLogoProps> = ({ size = 'md', classNa
         </div>
       </div>
 
-      <span className={`font-display font-black tracking-tight text-rose-600 uppercase drop-shadow-[0_0_12px_rgba(225,29,72,0.8)] ${sizeClasses.text}`}>
+      <span className={`font-display font-black tracking-tight text-[#E50914] uppercase ${sizeClasses.text}`}>
         GAD
       </span>
     </div>

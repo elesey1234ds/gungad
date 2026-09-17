@@ -29,6 +29,8 @@ export interface GameInfo {
   maxBetUSD: number;
   descriptionKey: string;
   locked?: boolean;
+  /** Lobby promo ribbon — pure display tag, no logic */
+  promo?: 'hot' | 'new' | 'top';
 }
 
 export interface UserProfile {

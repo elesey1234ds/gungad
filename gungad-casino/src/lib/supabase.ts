@@ -28,5 +28,5 @@ export async function fetchOnlinePlayersCount(): Promise<number | null> {
     console.warn('[supabase] online count', error.message);
     return null;
   }
-  return data?.online_count ?? 0;
+  return (data as { online_count?: number } | null)?.online_count ?? 0;
 }

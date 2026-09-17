@@ -126,7 +126,7 @@ export const CoinFlipGame: React.FC<CoinFlipGameProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col gap-4">
-        <div className="relative bg-[#0d0d12] border border-rose-900/40 rounded-2xl p-8 min-h-[320px] lg:min-h-[420px] flex flex-col items-center justify-center overflow-hidden shadow-2xl red-border-glow">
+        <div className="relative bg-[#121218] border border-white/10 rounded-2xl p-8 min-h-[320px] lg:min-h-[420px] flex flex-col items-center justify-center overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
           <div className="flex gap-4 mb-8 z-10">
             <button
               onClick={() => {
@@ -139,7 +139,7 @@ export const CoinFlipGame: React.FC<CoinFlipGameProps> = ({
               disabled={isFlipping}
               className={`px-6 py-3 rounded-xl border flex items-center gap-2 font-display font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none ${
                 choice === 'heads'
-                  ? 'bg-rose-600/30 border-rose-500 text-rose-300 shadow-[0_0_20px_rgba(225,29,72,0.4)]'
+                  ? 'bg-rose-950/60 border-[#E50914] text-rose-200'
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
@@ -158,7 +158,7 @@ export const CoinFlipGame: React.FC<CoinFlipGameProps> = ({
               disabled={isFlipping}
               className={`px-6 py-3 rounded-xl border flex items-center gap-2 font-display font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none ${
                 choice === 'tails'
-                  ? 'bg-rose-600/30 border-rose-500 text-rose-300 shadow-[0_0_20px_rgba(225,29,72,0.4)]'
+                  ? 'bg-rose-950/60 border-[#E50914] text-rose-200'
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
@@ -175,24 +175,24 @@ export const CoinFlipGame: React.FC<CoinFlipGameProps> = ({
           )}
 
           <div
-            className="w-44 h-44 md:w-52 md:h-52 rounded-full relative cursor-pointer transition-transform duration-[1600ms] ease-out shadow-[0_0_40px_rgba(225,29,72,0.5)]"
+            className="w-44 h-44 md:w-52 md:h-52 rounded-full relative cursor-pointer transition-transform duration-[1600ms] ease-out shadow-[0_10px_28px_rgba(0,0,0,0.55)]"
             style={{ transform: `rotateY(${rotation}deg)`, transformStyle: 'preserve-3d' }}
           >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black border-4 border-rose-600 flex flex-col items-center justify-center p-4 backface-hidden shadow-inner">
-              <Target className="w-16 h-16 text-rose-500 drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]" />
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black border-4 border-[#991B1B] flex flex-col items-center justify-center p-4 backface-hidden shadow-inner">
+              <Target className="w-16 h-16 text-rose-500" />
               <span className="font-display font-black text-white uppercase text-xs tracking-widest mt-2">{t('heads', lang)}</span>
             </div>
             <div
-              className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-950 via-zinc-900 to-black border-4 border-rose-600 flex flex-col items-center justify-center p-4 backface-hidden shadow-inner"
+              className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-950 via-zinc-900 to-black border-4 border-[#991B1B] flex flex-col items-center justify-center p-4 backface-hidden shadow-inner"
               style={{ transform: 'rotateY(180deg)' }}
             >
-              <Skull className="w-16 h-16 text-rose-400 drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]" />
+              <Skull className="w-16 h-16 text-rose-400" />
               <span className="font-display font-black text-rose-400 uppercase text-xs tracking-widest mt-2">{t('tails', lang)}</span>
             </div>
           </div>
 
           {result && playedChoice && !isFlipping && (
-            <div className="mt-8 text-center animate-bounce">
+            <div className="gg-win-in mt-8 text-center">
               <span className="font-display font-black text-2xl md:text-3xl text-white uppercase">
                 {result === playedChoice ? `${t('playerWins', lang)} +${winMult.toFixed(2)}x` : t('dealerWins', lang)}
               </span>
