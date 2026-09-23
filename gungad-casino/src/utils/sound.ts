@@ -1,3 +1,28 @@
+type SampleName = 'click' | 'chip' | 'win' | 'bigwin' | 'loss' | 'tick' | 'card' | 'gem';
+
+/** Pleasant CC0 samples (Kenney Interface Sounds) + soft synth fallback for boom */
+const SAMPLE_SRC: Record<SampleName, string> = {
+  click: '/sfx/click.ogg',
+  chip: '/sfx/chip.ogg',
+  win: '/sfx/win.ogg',
+  bigwin: '/sfx/bigwin.ogg',
+  loss: '/sfx/loss.ogg',
+  tick: '/sfx/tick.ogg',
+  card: '/sfx/card.ogg',
+  gem: '/sfx/gem.ogg',
+};
+
+const SAMPLE_VOL: Record<SampleName, number> = {
+  click: 0.8,
+  chip: 0.9,
+  win: 0.9,
+  bigwin: 1.0,
+  loss: 0.8,
+  tick: 0.7,
+  card: 0.9,
+  gem: 0.9,
+};
+
 class SoundController {
   private ctx: AudioContext | null = null;
   private masterFx: GainNode | null = null;
@@ -5,9 +30,14 @@ class SoundController {
   private musicMuted: boolean = false;
   private volume: number = 0.7;
   private musicVolume: number = 0.35;
-  private clickAudio: HTMLAudioElement | null = null;
+  private samples: Partial<Record<SampleName, HTMLAudioElement>> = {};
   private musicAudio: HTMLAudioElement | null = null;
   private musicStarted: boolean = false;
+  /** Playlist: new track first, legacy after. Auto-advances on ended. */
+  private musicTracks = ['/bg-music-2.mp3', '/bg-music.mp3'];
+  /** Human-readable track names shown in Settings (index-aligned with musicTracks). */
+  private musicTrackNames = ['GunGad Theme', 'Casino Lounge'];
+  private musicTrack = 0;
 
   constructor() {
     this.isMuted = localStorage.getItem('gungad_sound_muted') === 'true';
@@ -16,6 +46,10 @@ class SoundController {
     const savedMusicVol = parseFloat(localStorage.getItem('gungad_music_volume') || '');
     if (!Number.isNaN(savedVol)) this.volume = Math.min(1, Math.max(0, savedVol));
     if (!Number.isNaN(savedMusicVol)) this.musicVolume = Math.min(1, Math.max(0, savedMusicVol));
+    const savedTrack = parseInt(localStorage.getItem('gungad_music_track') || '', 10);
+    if (!Number.isNaN(savedTrack)) {
+      this.musicTrack = Math.min(this.musicTracks.length - 1, Math.max(0, savedTrack));
+    }
   }
 
   private initCtx() {
@@ -57,23 +91,95 @@ class SoundController {
     this.masterFx.connect(this.ctx.destination);
   }
 
-  private getClickAudio(): HTMLAudioElement {
-    if (!this.clickAudio) {
-      this.clickAudio = new Audio('/click.mp3');
-      this.clickAudio.preload = 'auto';
+  private playSample(name: SampleName) {
+    if (this.isMuted || this.volume <= 0) return;
+    try {
+      let audio = this.samples[name];
+      if (!audio) {
+        audio = new Audio(SAMPLE_SRC[name]);
+        audio.preload = 'auto';
+        this.samples[name] = audio;
+      }
+      audio.volume = Math.min(1, this.volume * SAMPLE_VOL[name]);
+      audio.currentTime = 0;
+      void audio.play().catch(() => {});
+    } catch {
+      // ignore
     }
-    this.clickAudio.volume = Math.min(1, this.fxGain() * 0.8);
-    return this.clickAudio;
   }
 
   private getMusicAudio(): HTMLAudioElement {
     if (!this.musicAudio) {
-      this.musicAudio = new Audio('/bg-music.mp3');
-      this.musicAudio.loop = true;
+      this.musicAudio = new Audio(this.musicTracks[this.musicTrack]);
+      this.musicAudio.loop = false;
       this.musicAudio.preload = 'auto';
+      this.musicAudio.onended = () => {
+        // Seamless playlist: next track after current ends
+        this.setMusicTrack((this.musicTrack + 1) % this.musicTracks.length, true);
+      };
     }
     this.musicAudio.volume = this.musicMuted ? 0 : this.musicVolume;
     return this.musicAudio;
+  }
+
+  public getMusicTrack(): number {
+    return this.musicTrack;
+  }
+
+  public getMusicTrackCount(): number {
+    return this.musicTracks.length;
+  }
+
+  public getMusicTrackName(idx: number = this.musicTrack): string {
+    const i = Math.min(this.musicTrackNames.length - 1, Math.max(0, idx));
+    return this.musicTrackNames[i] ?? `Track ${i + 1}`;
+  }
+
+  /** Stop and detach the current music element so it can never overlap the next one. */
+  private killMusicAudio() {
+    const old = this.musicAudio;
+    this.musicAudio = null;
+    if (!old) return;
+    try {
+      old.onended = null;
+      old.pause();
+      old.removeAttribute('src');
+      try {
+        old.load();
+      } catch {
+        /* ignore — just forces resource release */
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /** Switch track (keeps playing state). Returns new index. */
+  public setMusicTrack(idx: number, autoplay = true): number {
+    this.musicTrack = Math.min(this.musicTracks.length - 1, Math.max(0, idx));
+    localStorage.setItem('gungad_music_track', String(this.musicTrack));
+    const wasPlaying = Boolean(this.musicAudio && !this.musicAudio.paused);
+    // IMPORTANT: stop the old element first — otherwise both tracks play at once.
+    this.killMusicAudio();
+    if ((wasPlaying && autoplay) || this.musicStarted) {
+      if (this.musicMuted) return this.musicTrack;
+      const m = this.getMusicAudio();
+      m.volume = this.musicVolume;
+      void m.play().catch(() => {});
+    }
+    return this.musicTrack;
+  }
+
+  public nextMusicTrack(): number {
+    this.playClick();
+    return this.setMusicTrack((this.musicTrack + 1) % this.musicTracks.length);
+  }
+
+  public prevMusicTrack(): number {
+    this.playClick();
+    return this.setMusicTrack(
+      (this.musicTrack - 1 + this.musicTracks.length) % this.musicTracks.length,
+    );
   }
 
   /** Call once after first user gesture to unlock autoplay */
@@ -136,7 +242,10 @@ class SoundController {
   public setVolume(v: number) {
     this.volume = Math.min(1, Math.max(0, v));
     localStorage.setItem('gungad_sound_volume', String(this.volume));
-    if (this.clickAudio) this.clickAudio.volume = Math.min(1, this.fxGain() * 0.8);
+    (Object.keys(this.samples) as SampleName[]).forEach((name) => {
+      const audio = this.samples[name];
+      if (audio) audio.volume = Math.min(1, this.volume * SAMPLE_VOL[name]);
+    });
   }
 
   public getVolume(): number {
@@ -156,122 +265,31 @@ class SoundController {
   }
 
   public playClick() {
-    if (this.isMuted || this.volume <= 0) return;
-    try {
-      const audio = this.getClickAudio();
-      audio.currentTime = 0;
-      void audio.play();
-    } catch {
-      // ignore
-    }
+    this.playSample('click');
   }
 
   public playChip() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const g = 0.2 * this.volume;
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(2400, this.ctx.currentTime + 0.08);
-    gain.gain.setValueAtTime(g, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
-    osc.connect(gain);
-    gain.connect(this.fxOut());
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.08);
+    this.playSample('chip');
   }
 
   public playWin() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    notes.forEach((freq, idx) => {
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
-      gain.gain.setValueAtTime(0.12 * this.volume, this.ctx.currentTime + idx * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.25);
-      osc.connect(gain);
-      gain.connect(this.fxOut());
-      osc.start(this.ctx.currentTime + idx * 0.08);
-      osc.stop(this.ctx.currentTime + idx * 0.08 + 0.25);
-    });
+    this.playSample('win');
   }
 
   public playBigWin() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51, 1760];
-    notes.forEach((freq, idx) => {
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.06);
-      gain.gain.setValueAtTime(0.15 * this.volume, this.ctx.currentTime + idx * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.06 + 0.4);
-      osc.connect(gain);
-      gain.connect(this.fxOut());
-      osc.start(this.ctx.currentTime + idx * 0.06);
-      osc.stop(this.ctx.currentTime + idx * 0.06 + 0.4);
-    });
+    this.playSample('bigwin');
   }
 
   public playLoss() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.35);
-    gain.gain.setValueAtTime(0.2 * this.volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
-    osc.connect(gain);
-    gain.connect(this.fxOut());
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.35);
+    this.playSample('loss');
   }
 
   public playSpinTick() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(900 + Math.random() * 200, this.ctx.currentTime);
-    gain.gain.setValueAtTime(0.08 * this.volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
-    osc.connect(gain);
-    gain.connect(this.fxOut());
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.03);
+    this.playSample('tick');
   }
 
   public playCard() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(400, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.07);
-    gain.gain.setValueAtTime(0.12 * this.volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.07);
-    osc.connect(gain);
-    gain.connect(this.fxOut());
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.07);
+    this.playSample('card');
   }
 
   public playExplosion() {
@@ -299,20 +317,7 @@ class SoundController {
   }
 
   public playGem() {
-    if (this.isMuted || this.volume <= 0) return;
-    this.initCtx();
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800 + Math.random() * 400, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1600, this.ctx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.15 * this.volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
-    osc.connect(gain);
-    gain.connect(this.fxOut());
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.12);
+    this.playSample('gem');
   }
 }
 

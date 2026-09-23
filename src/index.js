@@ -75,15 +75,23 @@ async function startTelegramBotSafe() {
   const token = config.telegram.botToken || '';
   logger.info(`[bot] token_len=${token.length} suffix=${token.slice(-6)}`);
 
-  try {
-    const me = await bot.telegram.getMe();
-    logger.info(`[bot] getMe ok @${me.username} id=${me.id}`);
-  } catch (e) {
+  let me = null;
+  for (let i = 1; i <= 3; i += 1) {
+    try {
+      me = await bot.telegram.getMe();
+      break;
+    } catch (e) {
+      logger.error(`[bot] getMe attempt #${i}/3 failed: ${e?.message || e}`);
+      if (i < 3) await new Promise((r) => setTimeout(r, 5000));
+    }
+  }
+  if (!me) {
     logger.error(
-      `[bot] getMe failed — BOT_TOKEN invalid or still revoked. Update Railway BOT_TOKEN from @BotFather. ${e?.message || e}`,
+      '[bot] getMe failed — BOT_TOKEN invalid or still revoked. Update Railway BOT_TOKEN from @BotFather.',
     );
     return;
   }
+  logger.info(`[bot] getMe ok @${me.username} id=${me.id}`);
 
   try {
     await bot.telegram.deleteWebhook({ drop_pending_updates: true });
@@ -130,13 +138,26 @@ async function startTelegramBotSafe() {
 
   startPokerTimerWorker();
 
-  try {
-    await bot.launch({ dropPendingUpdates: true });
-    logger.logBotStart();
-    void maybeAnnounceCommandsOnline();
-    startDailyBonusNotify(bot);
-  } catch (e) {
-    logger.error(`[bot] launch failed (API stays up): ${e?.message || e}`);
+  // Long polling is single-shot by default: if launch fails (e.g. 409 while an
+  // old Railway instance is still shutting down), retry with backoff instead
+  // of leaving the bot silently dead until the next redeploy.
+  const delays = [5000, 10000, 20000, 30000, 60000];
+  let attempt = 0;
+  for (;;) {
+    try {
+      await bot.launch({ dropPendingUpdates: attempt > 0 });
+      logger.logBotStart();
+      void maybeAnnounceCommandsOnline();
+      startDailyBonusNotify(bot);
+      return;
+    } catch (e) {
+      const msg = e?.message || String(e);
+      const conflict = /409|conflict|terminated by other getUpdates/i.test(msg);
+      const wait = conflict ? 15000 : (delays[Math.min(attempt, delays.length - 1)]);
+      attempt += 1;
+      logger.error(`[bot] launch attempt #${attempt} failed (API stays up), retry in ${wait}ms: ${msg}`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
   }
 }
 

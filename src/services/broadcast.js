@@ -8,13 +8,27 @@ import logger from '../utils/logger.js';
 import { notifyLog } from './telegramLog.js';
 
 const PAGE = 400;
-const SEND_GAP_MS = 50;
+// Gentle pace for a weak host: ~2-3 msg/s keeps us far from Telegram's
+// ~30 msg/s global limit and never saturates Railway CPU/network.
+const SEND_GAP_MS = 350;
+const SEND_JITTER_MS = 150;
 const TG_TEXT_LIMIT = 3900;
 const TG_CAPTION_LIMIT = 1024;
 const MAIL_CMD_RE = /^\/(?:mail|announce|broadcast)(?:@\w+)?(?:[\t ]+|(?=\n)|$)/i;
 
+// Only one broadcast at a time — a second /mail while one is running is rejected.
+let broadcastRunning = null;
+
+export function isBroadcastRunning() {
+  return broadcastRunning;
+}
+
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function paceDelay() {
+  return SEND_GAP_MS + Math.floor(Math.random() * SEND_JITTER_MS);
 }
 
 function tgErrorCode(err) {
@@ -35,10 +49,15 @@ function isUserBlockedBot(err) {
 }
 
 async function markBotBlocked(sb, profileId) {
-  await sb
-    .from('gg_profiles')
-    .update({ bot_blocked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq('id', profileId);
+  try {
+    await sb
+      .from('gg_profiles')
+      .update({ bot_blocked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', profileId);
+  } catch (e) {
+    // A DB hiccup here must never abort the whole broadcast.
+    logger.warn(`[broadcast] markBotBlocked failed: ${e?.message || e}`);
+  }
 }
 
 export function getAdminPost(ctx) {
@@ -218,9 +237,12 @@ export function createMailSender(telegram, ctx) {
 
 /**
  * @param {{ telegram: import('telegraf').Telegram }} bot
- * @param {{ html?: string, sendOne?: Function, kind?: string, logTitle?: string }} opts
+ * @param {{ html?: string, sendOne?: Function, kind?: string, logTitle?: string, onProgress?: (done:number, fail:number, total:number|null)=>void }} opts
  */
 export async function runUserBroadcast(bot, opts = {}) {
+  if (broadcastRunning) {
+    return { ok: false, reason: 'already_running', kind: broadcastRunning };
+  }
   const html = String(opts.html || '').trim();
   const sendOpts = {
     parse_mode: 'HTML',
@@ -246,6 +268,22 @@ export async function runUserBroadcast(bot, opts = {}) {
   }
 
   const kind = String(opts.kind || `mail_${Date.now()}`).slice(0, 80);
+  const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : null;
+  broadcastRunning = kind;
+
+  // Total audience for progress reporting (non-fatal if it fails).
+  let total = null;
+  try {
+    const { count } = await sb
+      .from('gg_profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_blocked', false)
+      .not('telegram_id', 'is', null);
+    if (Number.isFinite(count)) total = count;
+  } catch {
+    /* ignore */
+  }
+
   let runId = null;
   try {
     const { data: inserted, error: insErr } = await sb
@@ -288,7 +326,7 @@ export async function runUserBroadcast(bot, opts = {}) {
           const code = tgErrorCode(err);
           if (code === 429) {
             const wait = Number(err?.response?.parameters?.retry_after || 2) * 1000;
-            await sleep(Math.min(Math.max(wait, 1000), 30_000));
+            await sleep(Math.min(Math.max(wait, 1000), 60_000));
             try {
               await sendOne(row.telegram_id);
               sent += 1;
@@ -307,7 +345,14 @@ export async function runUserBroadcast(bot, opts = {}) {
           }
         }
 
-        await sleep(SEND_GAP_MS);
+        if (onProgress && (sent + fail) % 25 === 0) {
+          try {
+            onProgress(sent, fail, total);
+          } catch {
+            /* progress must never break the loop */
+          }
+        }
+        await sleep(paceDelay());
       }
 
       if (data.length < PAGE) break;
@@ -339,5 +384,7 @@ export async function runUserBroadcast(bot, opts = {}) {
   } catch (err) {
     logger.error(`[broadcast] ${err?.message || err}`);
     return { ok: false, reason: err?.message || String(err), sent, fail, firstError };
+  } finally {
+    broadcastRunning = null;
   }
 }

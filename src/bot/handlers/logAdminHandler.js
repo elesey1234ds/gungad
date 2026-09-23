@@ -209,26 +209,69 @@ async function cmdMail(ctx) {
     return;
   }
 
-  await replyChunks(ctx, `📣 Рассылка запущена (${escapeHtml(mail.summary)})…`);
-  const result = await runUserBroadcast(
+  // Fire-and-forget: the broadcast runs in the background so a 600+ user
+  // send-out never blocks the bot's update handling (and can't take it down).
+  const chatId = ctx.chat?.id;
+  let statusId = null;
+  try {
+    const st = await ctx.telegram.sendMessage(
+      chatId,
+      `📣 Рассылка запущена (${escapeHtml(mail.summary)})…\nОтправлено: <b>0</b>`,
+      { parse_mode: 'HTML', disable_web_page_preview: true },
+    );
+    statusId = st?.message_id || null;
+  } catch {
+    /* fall back to plain replies */
+    await replyChunks(ctx, `📣 Рассылка запущена (${escapeHtml(mail.summary)})…`);
+  }
+
+  const kind = `mail_${Date.now()}`;
+  const editStatus = async (html) => {
+    if (!statusId) return;
+    try {
+      await ctx.telegram.editMessageText(chatId, statusId, undefined, html, {
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      });
+    } catch {
+      /* edit conflicts are harmless */
+    }
+  };
+
+  void runUserBroadcast(
     { telegram: ctx.telegram },
     {
       sendOne: mail.sendOne,
-      kind: `mail_${Date.now()}`,
+      kind,
       logTitle: '📣 <b>Рассылка /mail</b>',
+      onProgress: (sent, fail, total) => {
+        void editStatus(
+          [
+            `📣 Рассылка идёт (${escapeHtml(mail.summary)})…`,
+            `Отправлено: <b>${sent}</b> · Ошибки: <b>${fail}</b>${total != null ? ` · Всего: <b>${total}</b>` : ''}`,
+          ].join('\n'),
+        );
+      },
     },
-  );
-  if (!result?.ok) {
-    await replyChunks(ctx, `Не вышло: ${escapeHtml(result?.reason || 'unknown')}`);
-    return;
-  }
-  const errLine = result.firstError
-    ? `\nПервая ошибка: <code>${escapeHtml(String(result.firstError).slice(0, 180))}</code>`
-    : '';
-  await replyChunks(
-    ctx,
-    `Готово · sent=<b>${result.sent ?? 0}</b> · fail=<b>${result.fail ?? 0}</b>${errLine}`,
-  );
+  ).then(async (result) => {
+    if (!result?.ok) {
+      const why =
+        result?.reason === 'already_running'
+          ? 'уже идёт другая рассылка — дождись её конца'
+          : escapeHtml(result?.reason || 'unknown');
+      await editStatus(`📣 Рассылка не запущена: ${why}`);
+      return;
+    }
+    const errLine = result.firstError
+      ? `\nПервая ошибка: <code>${escapeHtml(String(result.firstError).slice(0, 180))}</code>`
+      : '';
+    await editStatus(
+      `Готово · sent=<b>${result.sent ?? 0}</b> · fail=<b>${result.fail ?? 0}</b>${errLine}`,
+    );
+  }).catch(async (e) => {
+    logger.error(`[mail] background failed: ${e?.message || e}`);
+    await editStatus('📣 Рассылка упала с ошибкой — смотри логи Railway.');
+  });
 }
 
 async function cmdBonusPush(ctx) {

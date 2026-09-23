@@ -9,6 +9,8 @@ import {
   VolumeX,
   Music,
   Music2,
+  SkipForward,
+  SkipBack,
   Settings,
   LifeBuoy,
   Gamepad2,
@@ -156,6 +158,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   const [panel, setPanel] = useState<'root' | 'settings' | 'referral' | 'referralStats'>('root');
   const [soundMuted, setSoundMuted] = useState(soundFx.getMuted());
   const [musicMuted, setMusicMuted] = useState(soundFx.getMusicMuted());
+  const [musicTrack, setMusicTrack] = useState(soundFx.getMusicTrack());
   const [volume, setVolume] = useState(soundFx.getVolume());
   const [musicVolume, setMusicVolume] = useState(soundFx.getMusicVolume());
   const [refStats, setRefStats] = useState<RefStats | null>(null);
@@ -630,6 +633,38 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
                     }`}
                   >
                     {musicMuted ? t('off', lang) : t('on', lang)}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFx.unlockAndStartMusic();
+                      setMusicTrack(soundFx.prevMusicTrack());
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-bold touch-manipulation transition-all active:scale-95"
+                    title={t('musicPrev', lang)}
+                  >
+                    <SkipBack className="w-4 h-4 text-rose-400" />
+                    {t('musicPrev', lang)}
+                  </button>
+                  <span className="text-xs font-bold text-zinc-300 text-center truncate flex-1 px-1">
+                    {soundFx.getMusicTrackName(musicTrack)}
+                    <span className="block text-zinc-500 font-mono font-normal">
+                      {musicTrack + 1} / {soundFx.getMusicTrackCount()}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFx.unlockAndStartMusic();
+                      setMusicTrack(soundFx.nextMusicTrack());
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-bold touch-manipulation transition-all active:scale-95"
+                    title={t('musicNext', lang)}
+                  >
+                    {t('musicNext', lang)}
+                    <SkipForward className="w-4 h-4 text-rose-400" />
                   </button>
                 </div>
                 <div className="flex flex-col gap-1">
