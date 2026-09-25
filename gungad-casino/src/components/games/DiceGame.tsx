@@ -6,7 +6,7 @@ import { soundFx } from '../../utils/sound';
 import { formatCurrency } from '../../utils/currencies';
 import confetti from 'canvas-confetti';
 import { RefreshCw } from 'lucide-react';
-import { forceDiceRoll, housePayoutFactor, keepLiveWin } from '../../game/demoOdds';
+import { DICE_LIVE_WIN_RATE, forceDiceRoll, housePayoutFactor, keepLiveWin } from '../../game/demoOdds';
 
 interface DiceGameProps {
   user: UserProfile;
@@ -77,7 +77,9 @@ export const DiceGame: React.FC<DiceGameProps> = ({
       if (!mountedRef.current) return;
       let finalRoll = parseFloat((Math.random() * 99.99).toFixed(2));
       const naturalWin = mode === 'over' ? finalRoll > targetValue : finalRoll < targetValue;
-      const win = keepLiveWin(naturalWin, isDemo);
+      // Dice keeps 80% of natural wins (not the global 30%): flipping more
+      // piles forced losses into one thin band (e.g. 99.xx x8) — too obvious.
+      const win = keepLiveWin(naturalWin, isDemo, Math.random, DICE_LIVE_WIN_RATE);
       if (win !== naturalWin) {
         finalRoll = forceDiceRoll(mode, targetValue, win);
       }
@@ -112,14 +114,14 @@ export const DiceGame: React.FC<DiceGameProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       {/* Dice Stage */}
       <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col gap-4">
-        <div className="relative bg-[#0d0d12] border border-rose-900/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-2xl red-border-glow overflow-visible">
+        <div className="gg-felt relative border border-white/10 rounded-3xl p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-[0_8px_24px_rgba(0,0,0,0.45)] overflow-visible">
           {/* Roll Result Readout */}
           <div className="flex flex-col items-center justify-center my-6">
             <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">
               {t('result', lang)}
             </span>
             <div
-              className={`font-display font-black text-6xl md:text-8xl transition-all ${
+              className={`font-display font-black text-6xl md:text-8xl tabular-nums transition-all ${
                 lastRoll === null
                   ? 'text-zinc-700'
                   : isRolling
@@ -134,13 +136,13 @@ export const DiceGame: React.FC<DiceGameProps> = ({
           </div>
 
           {/* Slider & Controls */}
-          <div className="flex flex-col gap-4 bg-[#111115] border border-zinc-800 rounded-2xl p-4">
+          <div className="flex flex-col gap-4 bg-[#0D0D11] border border-white/10 rounded-2xl p-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
             {/* Range Slider */}
             <div className="relative flex flex-col gap-2">
               <div className="flex justify-between items-center text-xs font-mono font-bold text-zinc-400">
-                <span>0</span>
-                <span className="text-rose-400 text-sm">{t('targetLabel', lang, { n: targetValue })}</span>
-                <span>100</span>
+                <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-800">0</span>
+                <span className="px-2.5 py-1 rounded-lg bg-rose-950/70 border border-[#991B1B]/60 text-rose-200 text-sm font-display">{t('targetLabel', lang, { n: targetValue })}</span>
+                <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-800">100</span>
               </div>
               <input
                 type="range"
@@ -150,7 +152,8 @@ export const DiceGame: React.FC<DiceGameProps> = ({
                 value={targetValue}
                 onChange={(e) => setTargetValue(parseFloat(e.target.value))}
                 disabled={isRolling}
-                className="w-full accent-rose-600 h-3 bg-zinc-900 rounded-lg cursor-pointer"
+                className="gg-range w-full"
+                style={{ ['--gg-fill' as string]: `${((targetValue - 2) / 96) * 100}%` }}
               />
             </div>
 
@@ -162,7 +165,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({
                   setMode(mode === 'over' ? 'under' : 'over');
                 }}
                 disabled={isRolling}
-                className="p-3 bg-zinc-900 border border-zinc-800 hover:border-rose-600 rounded-xl flex items-center justify-between transition-all"
+                className="gg-console-btn p-3 rounded-xl flex items-center justify-between"
               >
                 <span className="text-xs text-zinc-400 uppercase font-bold">{t('modeLabel', lang)}</span>
                 <span className="font-display font-bold text-rose-400 flex items-center gap-1 text-sm">
@@ -171,19 +174,19 @@ export const DiceGame: React.FC<DiceGameProps> = ({
                 </span>
               </button>
 
-              <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col justify-center">
+              <div className="p-3 bg-[#0D0D11] border border-[#991B1B]/50 rounded-xl flex flex-col justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                 <span className="text-xs text-zinc-400 uppercase font-bold">{t('multiplier', lang)}</span>
-                <span className="font-mono font-bold text-white text-base">{multiplier}x</span>
+                <span className="font-mono font-black text-rose-200 text-lg">{multiplier}x</span>
               </div>
 
-              <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col justify-center">
+              <div className="p-3 bg-[#0D0D11] border border-white/10 rounded-xl flex flex-col justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                 <span className="text-xs text-zinc-400 uppercase font-bold">{t('winChance', lang)}</span>
                 <span className="font-mono font-bold text-emerald-400 text-base">{winChance.toFixed(2)}%</span>
               </div>
 
-              <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col justify-center">
+              <div className="p-3 bg-[#0D0D11] border border-white/10 rounded-xl flex flex-col justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                 <span className="text-xs text-zinc-400 uppercase font-bold">{t('profit', lang)}</span>
-                <span className="font-mono font-bold text-rose-400 text-base">
+                <span className="font-mono font-bold text-amber-300 text-base">
                   {formatCurrency(potentialProfitUSD, currency)}
                 </span>
               </div>

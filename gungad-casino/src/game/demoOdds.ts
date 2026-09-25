@@ -13,17 +13,26 @@ export const LIVE_WIN_DIVISOR = 1 / LIVE_WIN_RATE;
 export const P_KEEP_LIVE_WIN = LIVE_WIN_RATE;
 
 /**
+ * Dice uses a much softer rigging (80%): at high win chances (e.g. 96%)
+ * flipping 70% of wins piles all forced losses into a tiny band above the
+ * target (e.g. endless 99.xx) — obvious to anyone. 80% keeps the house edge
+ * while losing streaks stay believable.
+ */
+export const DICE_LIVE_WIN_RATE = 0.8;
+
+/**
  * If the natural outcome is a loss, stay a loss.
- * If it is a win: demo keeps it; live keeps it only with P_KEEP_LIVE_WIN.
+ * If it is a win: demo keeps it; live keeps it only with `keepRate`.
  */
 export function keepLiveWin(
   naturalWin: boolean,
   isDemo: boolean,
   rng: () => number = Math.random,
+  keepRate: number = P_KEEP_LIVE_WIN,
 ): boolean {
   if (!naturalWin) return false;
   if (isDemo) return true;
-  return rng() < P_KEEP_LIVE_WIN;
+  return rng() < keepRate;
 }
 
 export function housePayoutFactor(isDemo: boolean): number {
