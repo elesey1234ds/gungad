@@ -186,49 +186,29 @@
 }
 
 .bandit-chrome {
-  background: linear-gradient(180deg, #f8e38a 0%, #c9a227 28%, #6b4e12 70%, #2a1c08 100%);
+  background: linear-gradient(180deg, #2b2b36 0%, #17171f 30%, #0c0c11 70%, #1d1d27 100%);
   box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.55),
-    0 0 28px rgba(251, 191, 36, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    0 18px 44px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px rgba(153, 27, 27, 0.5);
 }
 
 .bandit-lamp {
   width: 10px;
   height: 10px;
   border-radius: 9999px;
-  background: radial-gradient(circle at 30% 28%, #fff7d1 0%, #f59e0b 55%, #b45309 100%);
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.85);
-  animation: bandit-lamp 1.6s ease-in-out infinite;
+  background: radial-gradient(circle at 30% 28%, #ff8f98 0%, #E50914 55%, #7f0d14 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: bandit-lamp 2.2s ease-in-out infinite;
 }
 
 @keyframes bandit-lamp {
-  0%, 100% { opacity: 0.4; filter: brightness(0.8); }
-  50% { opacity: 1; filter: brightness(1.35); }
+  0%, 100% { opacity: 0.55; filter: brightness(0.85); }
+  50% { opacity: 1; filter: brightness(1.15); }
 }
 
-@keyframes plinko-ripple {
-  0% {
-    width: 6px;
-    height: 6px;
-    opacity: 0.85;
-    border-width: 2px;
-  }
-  100% {
-    width: 42px;
-    height: 42px;
-    opacity: 0;
-    border-width: 1px;
-  }
-}
-.plinko-ripple {
-  border-radius: 9999px;
-  border-style: solid;
-  border-color: rgba(244, 63, 94, 0.85);
-  box-shadow: 0 0 12px rgba(244, 63, 94, 0.45);
-  transform: translate(-50%, -50%);
-  animation: plinko-ripple 0.4s ease-out forwards;
-}
+/* Plinko peg hit-flash is rendered inline on the peg itself (transform + shadow),
+   no extra layers — safe for weak WebViews. */
 
 /* ═══════════════ CRASH ═══════════════════════════════════════ */
 
@@ -428,6 +408,106 @@
 .gg-console-btn-selected {
   border-color: #E50914;
   box-shadow: 0 0 0 1px #991B1B, 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* ═══════════════ Games overhaul: felt, arena, flip, cardback ═════════ */
+
+/* Deep graphite felt with fine dot texture */
+.gg-felt {
+  background-color: #121218;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+/* Embroidered ruby layout lines over felt */
+.gg-felt-red {
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 22px, rgba(153, 27, 27, 0.22) 22px 23px),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(153, 27, 27, 0.22) 22px 23px),
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: auto, auto, 14px 14px;
+}
+
+/* Matte toss bowl: dark radial + inner shadow depth */
+.gg-arena {
+  background: radial-gradient(ellipse at 50% 38%, #1c1c28 0%, #121218 58%, #0b0b0f 100%);
+  box-shadow: inset 0 18px 44px rgba(0, 0, 0, 0.6), inset 0 -8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Juicy card flip for revealed tiles */
+@keyframes gg-flip-in {
+  from { transform: rotateY(90deg) scale(0.92); }
+  to { transform: rotateY(0deg) scale(1); }
+}
+.gg-flip {
+  animation: gg-flip-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-style: preserve-3d;
+}
+
+/* Minimal dark card back with red embossing (Blackjack + Poker) */
+.gg-cardback {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(229, 9, 20, 0.22) 0%, transparent 62%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.045) 0 2px, transparent 2px 6px),
+    linear-gradient(135deg, #23232e 0%, #121218 70%);
+  border: 2px solid #991B1B;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 0 3px rgba(13, 13, 17, 0.85), inset 0 0 0 4px rgba(229, 9, 20, 0.35);
+}
+
+/* Console range slider (Dice): crimson-matte fill, chunky thumb */
+input[type='range'].gg-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  border-radius: 9999px;
+  background:
+    linear-gradient(90deg, #E50914 var(--gg-fill, 50%), #26262f var(--gg-fill, 50%));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  outline: none;
+  cursor: pointer;
+}
+input[type='range'].gg-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #ff4d57 0%, #E50914 45%, #7f0d14 100%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+input[type='range'].gg-range::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #ff4d57 0%, #E50914 45%, #7f0d14 100%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+input[type='range'].gg-range:disabled { opacity: 0.5; cursor: default; }
+
+/* Minted coin faces: gold / silver with embossed ring */
+.gg-coin-gold {
+  background: radial-gradient(circle at 35% 30%, #ffe9a8 0%, #f2c14e 38%, #9a6a14 76%, #5e3f0c 100%);
+}
+.gg-coin-silver {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #cfd2dc 38%, #7d8392 76%, #434755 100%);
+}
+.gg-coin-ring {
+  box-shadow:
+    inset 0 0 0 6px rgba(0, 0, 0, 0.16),
+    inset 0 0 0 8px rgba(255, 255, 255, 0.28),
+    inset 0 8px 20px rgba(255, 255, 255, 0.25),
+    inset 0 -12px 24px rgba(0, 0, 0, 0.42),
+    0 14px 30px rgba(0, 0, 0, 0.55);
+}
+
+/* Volumetric plinko bucket cell */
+.gg-paycell {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.45);
 }
 
 /* Floating dock */

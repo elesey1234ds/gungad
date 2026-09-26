@@ -16,8 +16,9 @@ interface PlinkoGameProps {
 }
 
 const ROW_COUNT = 8;
-const MAX_RIPPLES = 10;
+const MAX_FLASHES = 12;
 const STEP_MS = 100;
+const FLASH_MS = 350;
 
 interface BallState {
   id: number;
@@ -25,15 +26,15 @@ interface BallState {
   y: number;
 }
 
-interface Ripple {
+/** A peg that just got hit — rendered as a glow on the peg itself (no extra layers). */
+interface PegFlash {
   id: number;
-  x: number;
-  y: number;
+  key: string;
 }
 
 interface ActiveBall {
   id: number;
-  path: { x: number; y: number; peg: boolean }[];
+  path: { x: number; y: number; peg: boolean; row: number; pegIdx: number }[];
   step: number;
   nextAt: number;
   stake: number;
@@ -52,21 +53,24 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
   const [betAmountUSD, setBetAmountUSD] = useState<number>(10);
   const [risk, setRisk] = useState<'low' | 'medium' | 'high'>('medium');
   const [balls, setBalls] = useState<BallState[]>([]);
-  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [flashes, setFlashes] = useState<PegFlash[]>([]);
   const [lastMultiplier, setLastMultiplier] = useState<number | null>(null);
   const [hitBuckets, setHitBuckets] = useState<Record<number, number>>({});
   const [lastBetUSD, setLastBetUSD] = useState<number>(10);
 
   const mountedRef = useRef(true);
   const ballIdRef = useRef(0);
-  const rippleIdRef = useRef(0);
+  const flashIdRef = useRef(0);
   const balanceRef = useRef(user.balanceUSD);
   const bucketsRef = useRef<number[]>([]);
   const activeRef = useRef<Map<number, ActiveBall>>(new Map());
   const rafRef = useRef<number | null>(null);
   const positionsDirty = useRef(false);
-  const pendingRipples = useRef<Ripple[]>([]);
+  const pendingFlashes = useRef<PegFlash[]>([]);
   const settleQueue = useRef<Array<() => void>>([]);
+
+  /** Pegs hit in the last FLASH_MS — looked up while rendering the peg grid. */
+  const flashSet = useMemo(() => new Set(flashes.map((f) => f.key)), [flashes]);
 
   useEffect(() => {
     if (activeRef.current.size > 0) return;
@@ -118,18 +122,18 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
       setBalls(next);
     }
 
-    if (pendingRipples.current.length) {
-      const add = pendingRipples.current.splice(0, pendingRipples.current.length);
-      setRipples((prev) => {
+    if (pendingFlashes.current.length) {
+      const add = pendingFlashes.current.splice(0, pendingFlashes.current.length);
+      setFlashes((prev) => {
         const merged = [...prev, ...add];
-        return merged.length > MAX_RIPPLES ? merged.slice(-MAX_RIPPLES) : merged;
+        return merged.length > MAX_FLASHES ? merged.slice(-MAX_FLASHES) : merged;
       });
-      // Auto-remove after animation
-      add.forEach((r) => {
+      // Auto-remove after flash
+      add.forEach((f) => {
         window.setTimeout(() => {
           if (!mountedRef.current) return;
-          setRipples((prev) => prev.filter((x) => x.id !== r.id));
-        }, 400);
+          setFlashes((prev) => prev.filter((x) => x.id !== f.id));
+        }, FLASH_MS);
       });
     }
 
@@ -191,10 +195,9 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
         positionsDirty.current = true;
         if (pt.peg) {
           soundFx.playChip();
-          pendingRipples.current.push({
-            id: ++rippleIdRef.current,
-            x: pt.x,
-            y: pt.y,
+          pendingFlashes.current.push({
+            id: ++flashIdRef.current,
+            key: `${pt.row}-${pt.pegIdx}`,
           });
         }
       });
@@ -230,8 +233,8 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
     const goRight: boolean[] = Array.from({ length: ROW_COUNT }, () => Math.random() < 0.5);
 
     let rights = 0;
-    const path: { x: number; y: number; peg: boolean }[] = [];
-    path.push({ x: boardCenter, y: 2, peg: false });
+    const path: { x: number; y: number; peg: boolean; row: number; pegIdx: number }[] = [];
+    path.push({ x: boardCenter, y: 2, peg: false, row: -1, pegIdx: -1 });
 
     for (let r = 0; r < ROW_COUNT; r++) {
       if (goRight[r]) rights++;
@@ -239,7 +242,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
       const rowWidth = pegStep * (count - 1);
       const startX = boardCenter - rowWidth / 2;
       const idx = Math.min(Math.max(0, rights), count - 1);
-      path.push({ x: startX + idx * pegStep, y: getRowY(r), peg: true });
+      path.push({ x: startX + idx * pegStep, y: getRowY(r), peg: true, row: r, pegIdx: idx });
     }
 
     let bucketIndex = Math.max(0, Math.min(BUCKET_COUNT - 1, rights));
@@ -247,7 +250,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
       bucketIndex = nearestLosingPlinkoBucket(riskBuckets, bucketIndex);
     }
     const bucketX = (100 / BUCKET_COUNT) * (bucketIndex + 0.5);
-    path.push({ x: bucketX, y: 92, peg: false });
+    path.push({ x: bucketX, y: 92, peg: false, row: -1, pegIdx: -1 });
 
     activeRef.current.set(id, {
       id,
@@ -266,19 +269,19 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
       <div className="lg:col-span-4 order-1 lg:order-2 flex flex-col gap-2.5">
-        <div className="bg-[#111115] border border-zinc-800 rounded-xl p-2.5 flex flex-col gap-1.5 shrink-0">
+        <div className="gg-console-btn rounded-2xl p-2.5 flex flex-col gap-1.5 shrink-0">
           <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{t('riskLevel', lang)}</label>
           <div className="grid grid-cols-3 gap-1.5">
             {(['low', 'medium', 'high'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => { soundFx.playClick(); setRisk(r); }}
-                className={`py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+                className={`py-2 min-h-[44px] text-[11px] font-display font-bold uppercase rounded-xl border transition-all touch-manipulation active:scale-[0.97] ${
                   risk === r
-                    ? r === 'low' ? 'bg-emerald-950 border-emerald-600 text-emerald-400'
-                    : r === 'medium' ? 'bg-amber-950 border-amber-600 text-amber-400'
-                    : 'bg-rose-950 border-rose-600 text-rose-400'
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                    ? r === 'low' ? 'bg-emerald-950/70 border-emerald-700/70 text-emerald-300'
+                    : r === 'medium' ? 'bg-amber-950/60 border-amber-700/70 text-amber-200'
+                    : 'bg-rose-950/70 border-[#E50914] text-rose-200'
+                    : 'bg-[#0D0D11] border-white/10 text-zinc-400'
                 }`}
               >
                 {t(r as any, lang)}
@@ -304,37 +307,36 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
 
       <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col gap-2">
         <div
-          className="relative bg-[#0d0d12] border border-rose-900/40 rounded-2xl overflow-hidden shadow-2xl red-border-glow w-full mx-auto max-h-[min(52vh,480px)] max-w-[480px]"
+          className="gg-felt relative border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.45)] w-full mx-auto max-h-[min(52vh,480px)] max-w-[480px]"
           style={{ aspectRatio: '1 / 1' }}
         >
           <div className="absolute inset-0 z-10 pointer-events-none">
             {pegRows.map((count, rowIdx) =>
-              Array.from({ length: count }).map((_, pegIdx) => (
-                <div
-                  key={`${rowIdx}-${pegIdx}`}
-                  className="absolute w-1.5 h-1.5 rounded-full bg-zinc-300 shadow-[0_0_5px_rgba(255,255,255,0.4)]"
-                  style={{
-                    left: `${getPegX(rowIdx, pegIdx)}%`,
-                    top: `${getRowY(rowIdx)}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                />
-              ))
+              Array.from({ length: count }).map((_, pegIdx) => {
+                const flashed = flashSet.has(`${rowIdx}-${pegIdx}`);
+                return (
+                  <div
+                    key={`${rowIdx}-${pegIdx}`}
+                    className={`absolute w-2 h-2 rounded-full transition-all duration-150 ${
+                      flashed
+                        ? 'bg-gradient-to-b from-rose-200 to-[#E50914] shadow-[0_0_10px_rgba(229,9,20,0.9)]'
+                        : 'bg-gradient-to-b from-zinc-100 to-zinc-500 shadow-[0_1px_3px_rgba(0,0,0,0.6)]'
+                    }`}
+                    style={{
+                      left: `${getPegX(rowIdx, pegIdx)}%`,
+                      top: `${getRowY(rowIdx)}%`,
+                      transform: `translate(-50%, -50%) scale(${flashed ? 2 : 1})`,
+                    }}
+                  />
+                );
+              }),
             )}
           </div>
-
-          {ripples.map((r) => (
-            <div
-              key={r.id}
-              className="plinko-ripple absolute z-[15] pointer-events-none"
-              style={{ left: `${r.x}%`, top: `${r.y}%` }}
-            />
-          ))}
 
           {balls.map((b) => (
             <div
               key={b.id}
-              className="absolute w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(225,29,72,0.9)] z-20 will-change-transform"
+              className="absolute w-3 h-3 rounded-full bg-gradient-to-b from-[#ff4d57] to-[#B00710] border border-[#7f0d14] shadow-[0_2px_8px_rgba(0,0,0,0.5)] z-20 will-change-transform"
               style={{
                 left: `${b.x}%`,
                 top: `${b.y}%`,
@@ -353,19 +355,21 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
           >
             {buckets.map((m, idx) => {
               const recentlyHit = hitBuckets[idx] && Date.now() - hitBuckets[idx] < 600;
+              const distCenter = Math.abs(idx - (buckets.length - 1) / 2) / ((buckets.length - 1) / 2);
+              const edgeGlow = distCenter > 0.75 ? 'border-[#E50914]/70' : distCenter > 0.4 ? 'border-[#991B1B]/50' : 'border-white/10';
               return (
                 <div
                   key={idx}
-                  className={`flex-1 mx-px h-7 flex items-center justify-center font-mono font-bold text-[9px] rounded-t-md transition-all ${
+                  className={`gg-paycell flex-1 mx-px h-8 flex items-center justify-center font-mono font-bold text-[9px] rounded-lg transition-all ${
                     recentlyHit
-                      ? 'bg-yellow-400 text-black scale-105'
+                      ? 'gg-win-in bg-amber-300 text-black scale-105'
                       : m >= 10
-                      ? 'bg-rose-600 text-white'
+                      ? `bg-gradient-to-b from-[#E50914] to-[#7f0d14] text-white ${edgeGlow}`
                       : m >= 2
-                      ? 'bg-rose-800/80 text-rose-200'
+                      ? `bg-gradient-to-b from-[#7f1d2d] to-[#2a0d13] text-rose-200 ${edgeGlow}`
                       : m >= 1
-                      ? 'bg-zinc-700 text-zinc-200'
-                      : 'bg-zinc-900 text-zinc-500'
+                      ? 'bg-gradient-to-b from-zinc-700 to-zinc-900 text-zinc-200'
+                      : 'bg-gradient-to-b from-zinc-800 to-[#0D0D11] text-zinc-500'
                   }`}
                 >
                   {m}x
@@ -376,7 +380,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
         </div>
 
         {lastMultiplier !== null && (
-          <div className="text-center font-display font-black text-xl text-rose-400">
+          <div className="gg-win-in text-center font-display font-black text-xl text-rose-300 bg-[#121218] border border-[#991B1B]/50 rounded-2xl py-1.5 mx-auto w-full max-w-[480px]">
             {lastMultiplier}x
           </div>
         )}
